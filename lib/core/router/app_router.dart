@@ -1,9 +1,9 @@
 import 'package:bloom/core/router/routes.dart';
-import 'package:bloom/features/onboarding/data/presentation/screens/splash_screen.dart';
-import 'package:bloom/features/onboarding/data/presentation/screens/welcome_screen.dart';
-import 'package:bloom/features/onboarding/data/presentation/screens/welcome_screen_1.dart';
-import 'package:bloom/features/onboarding/data/presentation/screens/welcome_screen_2.dart';
-import 'package:bloom/features/onboarding/data/presentation/screens/welcome_screen_3.dart';
+import 'package:bloom/features/onboarding/presentation/screens/splash_screen.dart';
+import 'package:bloom/features/onboarding/presentation/screens/welcome_screen.dart';
+import 'package:bloom/features/onboarding/presentation/screens/welcome_screen_1.dart';
+import 'package:bloom/features/onboarding/presentation/screens/welcome_screen_3.dart';
+import 'package:bloom/features/onboarding/presentation/widgets/welcome_screen_2.dart';
 import 'package:go_router/go_router.dart';
 
 GoRouter createRouter({String? initialLocation}) {
