@@ -1,14 +1,15 @@
 import 'package:bloom/core/router/routes.dart';
+import 'package:bloom/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:bloom/features/onboarding/presentation/screens/splash_screen.dart';
+import 'package:bloom/features/onboarding/presentation/screens/welcome_scaffold.dart';
 import 'package:bloom/features/onboarding/presentation/screens/welcome_screen.dart';
-import 'package:bloom/features/onboarding/presentation/screens/welcome_screen_1.dart';
-import 'package:bloom/features/onboarding/presentation/screens/welcome_screen_3.dart';
+
 import 'package:bloom/features/onboarding/presentation/widgets/welcome_screen_2.dart';
 import 'package:go_router/go_router.dart';
 
 GoRouter createRouter({String? initialLocation}) {
   return GoRouter(
-    initialLocation: initialLocation ?? Routes.welcome1,
+    initialLocation: initialLocation ?? Routes.onboardingScreen,
     routes: [
       GoRoute(
         path: Routes.welcome,
@@ -25,15 +26,12 @@ GoRouter createRouter({String? initialLocation}) {
       ),
       GoRoute(
         path: Routes.welcome1,
-        builder: (context, state) => WelcomeScreen1(),
+        builder: (context, state) => WelcomeScaffold(child: WelcomeScreen2()),
       ),
+
       GoRoute(
-        path: Routes.welcome2,
-        builder: (context, state) => WelcomeScreen2(),
-      ),
-      GoRoute(
-        path: Routes.welcome3,
-        builder: (context, state) => WelcomeScreen3(),
+        path: Routes.onboardingScreen,
+        builder: (context, state) => const OnboardingScreen(),
       ),
     ],
   );

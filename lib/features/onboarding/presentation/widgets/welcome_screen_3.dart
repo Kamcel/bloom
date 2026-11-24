@@ -1,8 +1,9 @@
-import 'package:bloom/core/theme/app_colors.dart';
 import 'package:bloom/core/theme/app_dimension.dart';
+import 'package:bloom/core/widgets/app_button.dart';
 import 'package:bloom/features/onboarding/presentation/screens/welcome_scaffold.dart';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class WelcomeScreen3 extends StatelessWidget {
   const WelcomeScreen3({super.key});
@@ -22,15 +23,9 @@ class WelcomeScreen3 extends StatelessWidget {
           const Spacer(),
           SizedBox(
             width: double.infinity,
-            child: FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColor.softWhite,
-                foregroundColor: AppColor.deepPlum,
-              ),
-              onPressed: () {
-                // TODO: context.go(<your auth or onboarding route>)
-              },
-              child: const Text('Get Started'),
+            child: AppButton(
+              label: 'Get Started',
+              onPressed: () => context.go('/onboardingScreen'),
             ),
           ),
         ],

@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
+  final String? title;
   final bool showBack;
   final VoidCallback? onBack;
   final bool showSkip;
@@ -14,7 +14,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   const CustomAppBar({
     super.key,
-    required this.title,
+    this.title,
     required this.showBack,
     this.onBack,
     required this.showSkip,
@@ -38,7 +38,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       automaticallyImplyLeading: false,
       leading: showBack ? _buildBackButton(context) : null,
-      title: Text(title, style: textTheme.titleLarge),
+      title: title != null ? Text(title!, style: textTheme.titleLarge) : null,
       actions: allActions.isNotEmpty ? allActions : null,
       leadingWidth: 100,
     );
