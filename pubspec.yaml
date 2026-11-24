@@ -45,6 +45,7 @@ dependencies:
   phosphoricons_flutter: ^1.1.1
   flutter_svg: ^2.5.0
   json_annotation: ^4.12.0
+  intl: ^0.20.3
 
 dev_dependencies:
   flutter_test:
