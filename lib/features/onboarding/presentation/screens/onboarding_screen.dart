@@ -16,45 +16,51 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: OnboardingAppbar(
         currentStep: 1,
         totalSteps: 5,
-
         onBack: () => context.pop(),
       ),
-      body: SingleChildScrollView(
-        child: Stack(
+      body: SafeArea(
+        child: Column(
           children: [
-            Column(
-              children: [
-                Container(height: 600, color: Colors.red),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  left: 0,
-                  child: SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.standard,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AppButton(label: 'Continue'),
-                          Gap.vMin,
-                          TextButton(
-                            onPressed: () {},
-                            child: Text('Skip for now'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.standard,
                 ),
-              ],
+                child: Column(
+                  children: [
+                    Container(height: 600, color: Colors.red),
+                    Gap.vGroup,
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.standard,
+                AppSpacing.tight,
+                AppSpacing.standard,
+                AppSpacing.tight,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppButton(
+                    label: 'Continue',
+                    onPressed: () {},
+                  ),
+                  Gap.vMin,
+                  TextButton(
+                    onPressed: () {},
+                    child: const Text('Skip for now'),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
