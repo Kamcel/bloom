@@ -1,116 +1,143 @@
-///NB: Edd - Estimated Due Date
-///LMP - Last Menstrual Period
-int calculateEDDFromLMP({
+
+/// EDD - Estimated Due Date
+/// LMP - Last Menstrual Period
+
+/// Calculates EDD using the LMP method.
+/// Assumes a regular menstrual cycle.
+DateTime calculateEDDFromLMP({
   required DateTime lastMenstrualPeriod,
   int cycleLength = 28,
 }) {
   if (cycleLength < 20 || cycleLength > 40) {
     throw ArgumentError(
-      'Invalid cycle length. Please enter a value between 20 and 40 days.',
+      'Invalid cycle length. Enter a value between 20 and 40 days.',
     );
   }
+
   final adjustedLMP = cycleLength - 28;
-  return lastMenstrualPeriod
-      .add(Duration(days: 280 + adjustedLMP))
-      .millisecondsSinceEpoch;
+
+  return lastMenstrualPeriod.add(
+    Duration(days: 280 + adjustedLMP),
+  );
 }
 
+/// Calculates completed gestational weeks from LMP.
 int calculateGestationalAge(DateTime lastMenstrualPeriod) {
-  final currentDate = DateTime.now();
-  final gestationalAgeInDays = currentDate
-      .difference(lastMenstrualPeriod)
-      .inDays;
-  return (gestationalAgeInDays ~/ 7).floor(); // Return gestational age in weeks
+  final today = DateTime.now();
+
+  if (lastMenstrualPeriod.isAfter(today)) {
+    throw ArgumentError('LMP cannot be in the future.');
+  }
+
+  final gestationalAgeInDays =
+      today.difference(lastMenstrualPeriod).inDays;
+
+  return gestationalAgeInDays ~/ 7;
 }
 
-int calculateUltrasoundDate(DateTime lastMenstrualPeriod) {
-  final ultrasoundDate = lastMenstrualPeriod.add(
+/// Calculates the date corresponding to 12 weeks from LMP.
+DateTime calculateDateAt12Weeks(DateTime lastMenstrualPeriod) {
+  return lastMenstrualPeriod.add(
     const Duration(days: 84),
-  ); // 12 weeks
-  return ultrasoundDate.millisecondsSinceEpoch;
+  );
 }
 
-int calculateEDDFromUltrasound({
+/// Calculates EDD using ultrasound gestational age.
+DateTime calculateEDDFromUltrasound({
   required DateTime ultrasoundDate,
   required int gestationalWeeks,
   int gestationalDays = 0,
 }) {
   if (gestationalWeeks < 0 || gestationalWeeks > 40) {
     throw ArgumentError(
-      'Invalid gestational age at ultrasound. Please enter a value between 0 and 40 weeks.',
+      'Gestational weeks must be between 0 and 40.',
     );
   }
 
   if (gestationalDays < 0 || gestationalDays > 6) {
     throw ArgumentError(
-      'Invalid gestational days at ultrasound. Please enter a value between 0 and 6 days.',
+      'Gestational days must be between 0 and 6.',
     );
   }
 
-  final totalGestationalDays = (gestationalWeeks * 7) + gestationalDays;
+  final totalGestationalDays =
+      (gestationalWeeks * 7) + gestationalDays;
 
   if (totalGestationalDays > 280) {
     throw ArgumentError(
-      'Total gestational age at ultrasound cannot exceed 40 weeks (280 days).',
+      'Gestational age cannot exceed 40 weeks.',
     );
   }
+
   final remainingDays = 280 - totalGestationalDays;
-  return ultrasoundDate
-      .add(Duration(days: remainingDays))
-      .millisecondsSinceEpoch;
+
+  return ultrasoundDate.add(
+    Duration(days: remainingDays),
+  );
 }
 
+/// Determines the current trimester using LMP.
 int calculateTrimester(DateTime lastMenstrualPeriod) {
-  final currentDate = DateTime.now();
-  final gestationalAgeInDays = currentDate
-      .difference(lastMenstrualPeriod)
-      .inDays;
+  final today = DateTime.now();
 
-  if (gestationalAgeInDays < 0) {
-    throw ArgumentError('Last menstrual period cannot be in the future.');
+  if (lastMenstrualPeriod.isAfter(today)) {
+    throw ArgumentError('LMP cannot be in the future.');
   }
+
+  final gestationalAgeInDays =
+      today.difference(lastMenstrualPeriod).inDays;
 
   if (gestationalAgeInDays < 98) {
-    // Less than 14 weeks
-    return 1; // First trimester
+    return 1;
   } else if (gestationalAgeInDays < 196) {
-    // Less than 28 weeks
-    return 2; // Second trimester
+    return 2;
   } else {
-    return 3; // Third trimester
+    return 3;
   }
 }
 
-int calculateWeeksUntilDueDate(DateTime lastMenstrualPeriod) {
+/// Calculates remaining whole weeks until EDD.
+int calculateWeeksUntilDueDate({
+  required DateTime lastMenstrualPeriod,
+  int cycleLength = 28,
+}) {
   final estimatedDueDate = calculateEDDFromLMP(
     lastMenstrualPeriod: lastMenstrualPeriod,
+    cycleLength: cycleLength,
   );
+
   final today = DateTime.now();
-  final remainingDays = estimatedDueDate.difference(today).inDays;
+
+  final remainingDays = estimatedDueDate
+      .difference(DateTime(today.year, today.month, today.day))
+      .inDays;
 
   if (remainingDays <= 0) {
-    return 0; // Due date has passed or is today
+    return 0;
   }
+
   return remainingDays ~/ 7;
 }
 
-int calculateEstimatedDueDateFromConception(DateTime conceptionDate) {
-  final estimatedDueDate = conceptionDate.add(
+/// Calculates EDD from conception date (38 weeks).
+DateTime calculateEDDFromConception(DateTime conceptionDate) {
+  return conceptionDate.add(
     const Duration(days: 266),
-  ); // 38 weeks
-  return estimatedDueDate.millisecondsSinceEpoch;
+  );
 }
 
-int calculateEDDFromIVF({
+/// Calculates EDD from IVF embryo transfer date.
+DateTime calculateEDDFromIVF({
   required DateTime embryoTransferDate,
   required int embryoAgeInDays,
 }) {
-  if (embryoAgeInDays < 0 || embryoAgeInDays > 6) {
+  if (![3, 5, 6].contains(embryoAgeInDays)) {
     throw ArgumentError(
-      'Invalid embryo age. Please enter a value between 0 and 6 days.',
+      'Embryo age must be 3, 5, or 6 days.',
     );
   }
-  return embryoTransferDate
-      .add(Duration(days: 266 - embryoAgeInDays))
-      .millisecondsSinceEpoch;
+
+  return embryoTransferDate.add(
+    Duration(days: 266 - embryoAgeInDays),
+  );
 }
