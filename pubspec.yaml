@@ -46,6 +46,9 @@ dependencies:
   flutter_svg: ^2.5.0
   json_annotation: ^4.12.0
   intl: ^0.20.3
+  csc_picker_plus: ^0.0.3
+  date_picker_form_field: ^1.0.6
+  dropdown_flutter: ^1.3.0
 
 dev_dependencies:
   flutter_test:

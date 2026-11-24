@@ -169,6 +169,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.8"
+  csc_picker_plus:
+    dependency: "direct main"
+    description:
+      name: csc_picker_plus
+      sha256: "105e1989dd7462a504d60af024880918bb2936dbb9c97f46c4bd4923fe011411"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.3"
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -193,6 +201,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.14"
+  date_picker_form_field:
+    dependency: "direct main"
+    description:
+      name: date_picker_form_field
+      sha256: "3a96fb8c096c5f544da21860da0a556cfede7b4175346524bb66280acd5edc3e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.6"
   drift:
     dependency: "direct main"
     description:
@@ -209,6 +225,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.35.3"
+  dropdown_flutter:
+    dependency: "direct main"
+    description:
+      name: dropdown_flutter
+      sha256: "299e4eebe3572c3e91760dc495b1c5739a311e0e8897d71b7b9c93b82df58f86"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.3.0"
   fake_async:
     dependency: transitive
     description:
@@ -509,6 +533,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.19.6"
+  nested:
+    dependency: transitive
+    description:
+      name: nested
+      sha256: "03bac4c528c64c95c722ec99280375a6f2fc708eec17c7b3f07253b626cd2a20"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   objective_c:
     dependency: transitive
     description:
@@ -637,6 +669,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.6"
+  provider:
+    dependency: transitive
+    description:
+      name: provider
+      sha256: "4e82183fa20e5ca25703ead7e05de9e4cceed1fbd1eadc1ac3cb6f565a09f272"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.1.5+1"
   pub_semver:
     dependency: transitive
     description:
@@ -701,6 +741,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.10"
+  saible_consulting_core:
+    dependency: transitive
+    description:
+      name: saible_consulting_core
+      sha256: b98cc3220f8b42faeee4a548e7090e47b20984961880dedec5238514cab361fb
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.6"
   shelf:
     dependency: transitive
     description:

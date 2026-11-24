@@ -153,7 +153,7 @@ class OnboardingAppbar extends StatelessWidget implements PreferredSizeWidget {
                 final isCompletedOrActive = index < currentStep;
                 return Expanded(
                   child: Container(
-                    height: 6,
+                    height: 8,
                     margin: EdgeInsets.only(
                       right: index == totalSteps - 1 ? 0 : AppSpacing.tight,
                     ),

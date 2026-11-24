@@ -1,4 +1,5 @@
 import 'package:bloom/core/router/routes.dart';
+import 'package:bloom/features/onboarding/data/models/onboarding_questions_page.dart';
 import 'package:bloom/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:bloom/features/onboarding/presentation/screens/splash_screen.dart';
 import 'package:bloom/features/onboarding/presentation/screens/welcome_screen_1.dart';
@@ -10,7 +11,7 @@ import 'package:go_router/go_router.dart';
 
 GoRouter createRouter({String? initialLocation}) {
   return GoRouter(
-    initialLocation: initialLocation ?? Routes.splash,
+    initialLocation: initialLocation ?? Routes.onboardingScreen,
     routes: [
       GoRoute(
         path: Routes.welcome,
@@ -40,7 +41,22 @@ GoRouter createRouter({String? initialLocation}) {
 
       GoRoute(
         path: Routes.onboardingScreen,
-        builder: (context, state) => const OnboardingScreen(),
+        builder: (context, state) => const OnboardingScreen(
+          pages: [
+            OnboardingQuestionsPage(
+              title: 'Let\'s get to know you',
+              subTitle: 'We\'ll ask you a few questions to personalize your experience',
+            ),
+            OnboardingQuestionsPage(
+              title: 'Your pregnancy journey',
+              subTitle: 'We\'ll ask you a few questions to personalize your experience',
+            ),
+            OnboardingQuestionsPage(
+              title: 'Your pregnancy journey',
+              subTitle: 'We\'ll ask you a few questions to personalize your experience',
+            ),
+          ],
+        ),
       ),
     ],
   );
