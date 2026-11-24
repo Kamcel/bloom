@@ -2,6 +2,7 @@ import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/widgets/app_button.dart';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -69,9 +70,7 @@ class WelcomeScreen extends StatelessWidget {
                 const SizedBox(height: AppSpacing.tight - 4),
                 TextButton(
                   style: TextButton.styleFrom(foregroundColor: colors.primary),
-                  onPressed: () {
-                    //TODO: Ad navigation to honboarding questions
-                  },
+                  onPressed: () => context.go('/onboardingScreen'),
                   child: Text('I already have an account'),
                 ),
               ],
