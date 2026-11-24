@@ -20,7 +20,7 @@ int calculateGestationalAge(DateTime lastMenstrualPeriod) {
   final gestationalAgeInDays = currentDate
       .difference(lastMenstrualPeriod)
       .inDays;
-  return (gestationalAgeInDays / 7).floor(); // Return gestational age in weeks
+  return (gestationalAgeInDays ~/ 7).floor(); // Return gestational age in weeks
 }
 
 int calculateUltrasoundDate(DateTime lastMenstrualPeriod) {
@@ -70,8 +70,8 @@ int calculateTrimester(DateTime lastMenstrualPeriod) {
     throw ArgumentError('Last menstrual period cannot be in the future.');
   }
 
-  if (gestationalAgeInDays < 84) {
-    // Less than 12 weeks
+  if (gestationalAgeInDays < 98) {
+    // Less than 14 weeks
     return 1; // First trimester
   } else if (gestationalAgeInDays < 196) {
     // Less than 28 weeks
@@ -82,25 +82,35 @@ int calculateTrimester(DateTime lastMenstrualPeriod) {
 }
 
 int calculateWeeksUntilDueDate(DateTime lastMenstrualPeriod) {
-  final estimatedDeliveryDate = lastMenstrualPeriod.add(
-    const Duration(days: 280),
+  final estimatedDueDate = calculateEDDFromLMP(
+    lastMenstrualPeriod: lastMenstrualPeriod,
   );
-  final currentDate = DateTime.now();
-  final weeksUntilDueDate =
-      estimatedDeliveryDate.difference(currentDate).inDays ~/ 7;
-  return weeksUntilDueDate;
+  final today = DateTime.now();
+  final remainingDays = estimatedDueDate.difference(today).inDays;
+
+  if (remainingDays <= 0) {
+    return 0; // Due date has passed or is today
+  }
+  return remainingDays ~/ 7;
 }
 
-int calculateEstimatedDeliveryDateFromConception(DateTime conceptionDate) {
-  final estimatedDeliveryDate = conceptionDate.add(
-    const Duration(days: 266),
-  ); // 38 weeks
-  return estimatedDeliveryDate.millisecondsSinceEpoch;
-}
-
-int calculateEstimatedDueDateFromIVF(DateTime embryoTransferDate) {
-  final estimatedDueDate = embryoTransferDate.add(
+int calculateEstimatedDueDateFromConception(DateTime conceptionDate) {
+  final estimatedDueDate = conceptionDate.add(
     const Duration(days: 266),
   ); // 38 weeks
   return estimatedDueDate.millisecondsSinceEpoch;
+}
+
+int calculateEDDFromIVF({
+  required DateTime embryoTransferDate,
+  required int embryoAgeInDays,
+}) {
+  if (embryoAgeInDays < 0 || embryoAgeInDays > 6) {
+    throw ArgumentError(
+      'Invalid embryo age. Please enter a value between 0 and 6 days.',
+    );
+  }
+  return embryoTransferDate
+      .add(Duration(days: 266 - embryoAgeInDays))
+      .millisecondsSinceEpoch;
 }
