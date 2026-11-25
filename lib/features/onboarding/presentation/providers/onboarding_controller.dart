@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:bloom/core/models/dating_method.dart';
+import 'package:bloom/core/models/dating_result.dart';
+import 'package:bloom/core/utils/edd_calculator.dart';
 import 'package:bloom/features/onboarding/data/models/onboarding_data.dart';
 import 'package:bloom/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -17,6 +19,7 @@ typedef OnboardingState = ({
 @riverpod
 class OnboardingController extends _$OnboardingController {
   static const int totalSteps = 3;
+
   Timer? _debounceTimer;
   Future<void>? _saveOperation;
 
@@ -32,7 +35,7 @@ class OnboardingController extends _$OnboardingController {
     if (progress != null) {
       return (
         data: progress.data,
-        currentStep: progress.currentStep,
+        currentStep: progress.currentStep.clamp(0, totalSteps - 1).toInt(),
         isSaving: false,
         isSubmitting: false,
       );
@@ -46,7 +49,9 @@ class OnboardingController extends _$OnboardingController {
     );
   }
 
-  //Personal information
+  // ---------------------------------------------------------------------------
+  // Personal information
+  // ---------------------------------------------------------------------------
 
   String? validatePersonalInformation(OnboardingData data) {
     if (data.name == null || data.name!.trim().isEmpty) {
@@ -77,107 +82,272 @@ class OnboardingController extends _$OnboardingController {
   }
 
   void updateName(String? name) {
-    final current = state.asData?.value;
-    if (current == null) return;
-
-    updateData(current.data.copyWith(name: name));
+    _updateData((data) => data.copyWith(name: name));
   }
 
   void updateDOB(DateTime? dob) {
-    final current = state.asData?.value;
-    if (current == null) return;
-
-    updateData(current.data.copyWith(dateOfBirth: dob));
+    _updateData((data) => data.copyWith(dateOfBirth: dob));
   }
 
   void updateCountry(String? country) {
-    final current = state.asData?.value;
-    if (current == null) return;
-
-    updateData(
-      current.data.copyWith(country: country, state: null, city: null),
+    _updateData(
+      (data) => data.copyWith(country: country, state: null, city: null),
     );
   }
 
   void updateState(String? stateProvince) {
-    final current = state.asData?.value;
-    if (current == null) return;
-
-    updateData(current.data.copyWith(state: stateProvince, city: null));
+    _updateData((data) => data.copyWith(state: stateProvince, city: null));
   }
 
   void updateCity(String? city) {
+    _updateData((data) => data.copyWith(city: city));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Pregnancy dating method
+  // ---------------------------------------------------------------------------
+
+  void updateDatingMethod(DatingMethod? method) {
+    _updateData((data) => data.copyWith(datingMethod: method));
+  }
+
+  // Last menstrual period
+
+  void updateLastMenstrualPeriod(DateTime? date) {
+    _updateData((data) => data.copyWith(lastMenstrualPeriod: date));
+  }
+
+  void updateCycleRegularity(bool? isRegular) {
+    _updateData((data) => data.copyWith(cyclesRegular: isRegular));
+  }
+
+  void updateCycleLength(int? days) {
+    _updateData((data) => data.copyWith(cycleLengthDays: days));
+  }
+
+  // Conception
+
+  void updateConceptionDate(DateTime? date) {
+    _updateData((data) => data.copyWith(conceptionDate: date));
+  }
+
+  // IVF
+
+  void updateIVFTransferDate(DateTime? date) {
+    _updateData((data) => data.copyWith(ivfTransferDate: date));
+  }
+
+  void updateIVFEmbryoAge(int? days) {
+    _updateData((data) => data.copyWith(ivfEmbryoAgeDays: days));
+  }
+
+  // Ultrasound
+
+  void updateUltrasoundDate(DateTime? date) {
+    _updateData((data) => data.copyWith(ultrasoundDate: date));
+  }
+
+  void updateUltrasoundGestationalWeeks(int? weeks) {
+    _updateData((data) => data.copyWith(ultrasoundGestationalWeeks: weeks));
+  }
+
+  void updateUltrasoundGestationalDays(int? days) {
+    _updateData((data) => data.copyWith(ultrasoundGestationalDays: days));
+  }
+
+  // Due dates
+
+  void updateKnownDueDate(DateTime? date) {
+    _updateData((data) => data.copyWith(knownDueDate: date));
+  }
+
+  void updateProviderConfirmedDueDate(DateTime? date) {
+    _updateData((data) => data.copyWith(providerConfirmedDueDate: date));
+  }
+
+  // Pregnancy history
+
+  void updateFirstPregnancy(bool? isFirstPregnancy) {
+    _updateData((data) => data.copyWith(isFirstPregnancy: isFirstPregnancy));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Pregnancy validation
+  // ---------------------------------------------------------------------------
+
+  String? validatePregnancyInformation(OnboardingData data) {
+    final method = data.datingMethod;
+
+    if (method == null) {
+      return 'Please select how your pregnancy is dated.';
+    }
+
+    if (method == DatingMethod.unknown) {
+      return null;
+    }
+
+    if (method == DatingMethod.lastMenstrualPeriod) {
+      if (data.lastMenstrualPeriod == null) {
+        return 'Please enter the first day of your last menstrual period.';
+      }
+
+      if (data.cyclesRegular == null) {
+        return 'Please tell us whether your menstrual cycles are regular.';
+      }
+
+      if (data.cyclesRegular == true &&
+          data.cycleLengthDays != null &&
+          (data.cycleLengthDays! < 21 || data.cycleLengthDays! > 35)) {
+        return 'Please enter a cycle length between 21 and 35 days.';
+      }
+    } else if (method == DatingMethod.conceptionDate) {
+      if (data.conceptionDate == null) {
+        return 'Please enter your conception date.';
+      }
+    } else if (method == DatingMethod.ivfTransfer) {
+      if (data.ivfTransferDate == null) {
+        return 'Please enter your embryo transfer date.';
+      }
+
+      if (![3, 5, 6].contains(data.ivfEmbryoAgeDays)) {
+        return 'Embryo age must be 3, 5 or 6 days.';
+      }
+    } else if (method == DatingMethod.ultrasound) {
+      if (data.ultrasoundDate == null) {
+        return 'Please enter your ultrasound date.';
+      }
+
+      if (data.ultrasoundGestationalWeeks == null) {
+        return 'Please enter the gestational weeks from your scan.';
+      }
+
+      final days = data.ultrasoundGestationalDays ?? 0;
+
+      if (days < 0 || days > 6) {
+        return 'Gestational days must be between 0 and 6.';
+      }
+    } else if (method == DatingMethod.knownDueDate) {
+      if (data.knownDueDate == null) {
+        return 'Please enter your estimated due date.';
+      }
+    } else if (method == DatingMethod.providerConfirmed) {
+      if (data.providerConfirmedDueDate == null) {
+        return 'Please enter the due date confirmed by your healthcare professional.';
+      }
+    }
+
+    try {
+      final result = calculateDatingResult(data);
+
+      if (result == null) {
+        return 'We could not calculate your estimated due date. Please check your information.';
+      }
+
+      return null;
+    } on ArgumentError {
+      return 'Please check your pregnancy dating information.';
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Estimated due date calculation
+  // ---------------------------------------------------------------------------
+
+  DatingResult? calculateDatingResult(OnboardingData data) {
+    switch (data.datingMethod) {
+      case DatingMethod.lastMenstrualPeriod:
+        final date = data.lastMenstrualPeriod;
+        if (date == null || data.cyclesRegular == null) return null;
+
+        return eddFromLastPeriod(
+          lastPeriod: date,
+          cyclesRegular: data.cyclesRegular!,
+          cycleLengthDays: data.cycleLengthDays,
+        );
+
+      case DatingMethod.conceptionDate:
+        final date = data.conceptionDate;
+        if (date == null) return null;
+
+        return eddFromConception(date);
+
+      case DatingMethod.ivfTransfer:
+        final date = data.ivfTransferDate;
+        final embryoAge = data.ivfEmbryoAgeDays;
+
+        if (date == null || embryoAge == null) return null;
+
+        return eddFromIvfTransfer(transferDate: date, embryoAgeDays: embryoAge);
+
+      case DatingMethod.ultrasound:
+        final date = data.ultrasoundDate;
+        final weeks = data.ultrasoundGestationalWeeks;
+
+        if (date == null || weeks == null) return null;
+
+        return eddFromUltrasound(
+          scanDate: date,
+          gestationalWeeks: weeks,
+          gestationalDays: data.ultrasoundGestationalDays ?? 0,
+        );
+
+      case DatingMethod.knownDueDate:
+        final date = data.knownDueDate;
+        if (date == null) return null;
+
+        return DatingResult(
+          edd: dateOnly(date),
+          method: DatingMethod.knownDueDate,
+          confidence: DatingConfidence.low,
+          note: 'This date was provided by you and has not been confirmed by a healthcare professional.',
+        );
+
+      case DatingMethod.providerConfirmed:
+        final date = data.providerConfirmedDueDate;
+        if (date == null) return null;
+
+        return providerConfirmedEdd(date);
+
+      case DatingMethod.unknown:
+      case null:
+        return null;
+    }
+  }
+
+  DatingResult? get datingResult {
+    final current = state.asData?.value;
+    if (current == null) return null;
+
+    return calculateDatingResult(current.data);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Data updates and autosave
+  // ---------------------------------------------------------------------------
+
+  void _updateData(OnboardingData Function(OnboardingData data) update) {
     final current = state.asData?.value;
     if (current == null) return;
 
-    updateData(current.data.copyWith(city: city));
+    updateData(update(current.data));
   }
-
-  // Pregnancy journey
-  //last Menstral period
-  void updateLastMenstrualPeriod(DatingMethod datingMethod) {
-    final current = state.asData?.value;
-    if (current == null) return;
-
-    updateData(current.data.copyWith(datingMethod: datingMethod));
-  }
-
-  //conception date
-  void updateConceptionDate(DatingMethod datingMethod) {
-    final current = state.asData?.value;
-    if (current == null) return;
-
-    updateData(current.data.copyWith(datingMethod: datingMethod));
-  }
-
-  //ivf transfer
-  void updateIVFTransferDate(DatingMethod datingMethod) {
-    final current = state.asData?.value;
-    if (current == null) return;
-
-    updateData(current.data.copyWith(datingMethod: datingMethod));
-  }
-
-  //ultasound
-  void updateUltrasoundDate(DatingMethod datingMethod) {
-    final current = state.asData?.value;
-    if (current == null) return;
-
-    updateData(current.data.copyWith(datingMethod: datingMethod));
-  }
-
-  //I know my due date
-  void updateKnownnDate(DatingMethod datingMethod) {
-    final current = state.asData?.value;
-    if (current == null) return;
-
-    updateData(current.data.copyWith(datingMethod: datingMethod));
-  }
-
-  // i dont know
-  void updateUnknowDate(DatingMethod datingMethod) {
-    final current = state.asData?.value;
-    if (current == null) return;
-
-    updateData(current.data.copyWith(datingMethod: datingMethod));
-  }
-
-  //confirmed by professional
-  void updateProfessionalDate(DatingMethod datingMethod) {
-    final current = state.asData?.value;
-    if (current == null) return;
-
-    updateData(current.data.copyWith(datingMethod: datingMethod));
-  }
-
-  //first pregnancy?
 
   void updateData(OnboardingData data) {
     final current = state.asData?.value;
     if (current == null) return;
 
+    DateTime? calculatedEdd;
+
+    try {
+      calculatedEdd = calculateDatingResult(data)?.edd;
+    } on ArgumentError {
+      calculatedEdd = null;
+    }
+
+    final updatedData = data.copyWith(estimatedDueDate: calculatedEdd);
+
     state = AsyncData((
-      data: data,
+      data: updatedData,
       currentStep: current.currentStep,
       isSaving: current.isSaving,
       isSubmitting: current.isSubmitting,
@@ -190,7 +360,11 @@ class OnboardingController extends _$OnboardingController {
     _debounceTimer?.cancel();
 
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      saveProgress();
+      unawaited(
+        saveProgress().catchError((Object error) {
+          // A later save can still proceed if this save fails.
+        }),
+      );
     });
   }
 
@@ -199,7 +373,7 @@ class OnboardingController extends _$OnboardingController {
 
     final newSave = previousSave
         .catchError((Object error) {
-          // Allow the next save to proceed even if the previous one failed.
+          // Allow the next queued save to proceed.
         })
         .then((_) async {
           final current = state.asData?.value;
@@ -238,6 +412,10 @@ class OnboardingController extends _$OnboardingController {
     return newSave;
   }
 
+  // ---------------------------------------------------------------------------
+  // Step navigation
+  // ---------------------------------------------------------------------------
+
   Future<void> nextStep() async {
     final current = state.asData?.value;
     if (current == null) return;
@@ -246,6 +424,11 @@ class OnboardingController extends _$OnboardingController {
 
     if (current.currentStep == 0 &&
         validatePersonalInformation(current.data) != null) {
+      return;
+    }
+
+    if (current.currentStep == 1 &&
+        validatePregnancyInformation(current.data) != null) {
       return;
     }
 
@@ -277,9 +460,20 @@ class OnboardingController extends _$OnboardingController {
     await saveProgress();
   }
 
+  // ---------------------------------------------------------------------------
+  // Onboarding completion
+  // ---------------------------------------------------------------------------
+
   Future<void> completeOnboarding() async {
     final current = state.asData?.value;
+
     if (current == null || current.isSubmitting) return;
+
+    if (current.currentStep != totalSteps - 1) return;
+
+    if (validatePersonalInformation(current.data) != null) return;
+
+    if (validatePregnancyInformation(current.data) != null) return;
 
     _debounceTimer?.cancel();
 
@@ -309,14 +503,17 @@ class OnboardingController extends _$OnboardingController {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Clear onboarding progress
+  // ---------------------------------------------------------------------------
+
   Future<void> clearProgress() async {
     _debounceTimer?.cancel();
 
-    // Wait for any ongoing or queued save to finish.
     try {
       await _saveOperation;
     } catch (_) {
-      // Continue clearing even if the previous save failed.
+      // Continue clearing even if a previous save failed.
     }
 
     final repository = ref.read(onboardingRepositoryProvider);

@@ -9,8 +9,6 @@ abstract class OnboardingData with _$OnboardingData {
   const OnboardingData._();
 
   const factory OnboardingData({
-    // Account preference
-
     // Personal information
     String? name,
     DateTime? dateOfBirth,
@@ -18,10 +16,36 @@ abstract class OnboardingData with _$OnboardingData {
     String? state,
     String? city,
 
-    // Pregnancy Information
+    // Pregnancy dating method
     DatingMethod? datingMethod,
+
+    // Last menstrual period
+    DateTime? lastMenstrualPeriod,
+    bool? cyclesRegular,
+    int? cycleLengthDays,
+
+    // Conception
+    DateTime? conceptionDate,
+
+    // IVF
+    DateTime? ivfTransferDate,
+    int? ivfEmbryoAgeDays,
+
+    // Ultrasound
+    DateTime? ultrasoundDate,
+    int? ultrasoundGestationalWeeks,
+    int? ultrasoundGestationalDays,
+
+    // Due date supplied by the user
+    DateTime? knownDueDate,
+
+    // Due date confirmed by a healthcare professional
+    DateTime? providerConfirmedDueDate,
+
+    // Calculated result
     DateTime? estimatedDueDate,
-    DateTime? lastMensuralPeriod,
+
+    // Retained for existing pregnancy information
     int? pregnancyWeek,
     int? pregnancyDay,
 
