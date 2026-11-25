@@ -1,3 +1,6 @@
+import 'package:bloom/core/models/dating_method.dart';
+import 'package:bloom/core/models/dating_result.dart';
+import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/theme/app_utils.dart';
 import 'package:bloom/core/utils/date_util.dart';
 import 'package:bloom/core/utils/edd_calculator.dart';
@@ -5,23 +8,15 @@ import 'package:bloom/features/onboarding/data/models/onboarding_questions_page.
 import 'package:dropdown_flutter/custom_dropdown.dart';
 import 'package:flutter/material.dart';
 
-enum DueDateCalculationMethod {
-  lastMenstrualPeriod,
-  conceptionDate,
-  ivfTransfer,
-  ultrasound,
-  knowDueDate,
-  iDontKnow,
-}
-
-extension DueDateCalculationMethodLabel on DueDateCalculationMethod {
+extension DatingMethodLabel on DatingMethod {
   String get label => switch (this) {
-    DueDateCalculationMethod.lastMenstrualPeriod => 'Last menstrual period',
-    DueDateCalculationMethod.conceptionDate => 'Conception date',
-    DueDateCalculationMethod.ivfTransfer => 'IVF transfer',
-    DueDateCalculationMethod.ultrasound => 'Ultrasound',
-    DueDateCalculationMethod.knowDueDate => 'I know my due date',
-    DueDateCalculationMethod.iDontKnow => "I don't know",
+    DatingMethod.lastMenstrualPeriod => 'Last menstrual period',
+    DatingMethod.conceptionDate => 'Conception date',
+    DatingMethod.ivfTransfer => 'IVF transfer',
+    DatingMethod.ultrasound => 'Ultrasound',
+    DatingMethod.knownDueDate => 'I know my due date',
+    DatingMethod.unknown => "I don't know",
+    DatingMethod.providerConfirmed => 'Confirmed by my healthcare provider',
   };
 }
 
@@ -65,8 +60,9 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
   ];
 
   final TextEditingController _dateController = TextEditingController();
-  DueDateCalculationMethod _selectedMethod =
-      DueDateCalculationMethod.lastMenstrualPeriod;
+
+  DatingMethod _selectedMethod = DatingMethod.lastMenstrualPeriod;
+
   DateTime? _selectedDate;
 
   // LMP options
@@ -77,7 +73,7 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
   int _gestationalWeeks = 8;
   int _gestationalDays = 0;
 
-  // IVF options (3, 5, or 6)
+  // IVF options
   int _embryoAgeDays = 5;
 
   @override
@@ -86,54 +82,68 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
     super.dispose();
   }
 
-  bool get _requiresDate =>
-      _selectedMethod != DueDateCalculationMethod.iDontKnow;
+  bool get _requiresDate => _selectedMethod != DatingMethod.unknown;
+
+  bool get _isDueDateMethod =>
+      _selectedMethod == DatingMethod.knownDueDate ||
+      _selectedMethod == DatingMethod.providerConfirmed;
 
   String get _dateFieldLabel => switch (_selectedMethod) {
-    DueDateCalculationMethod.lastMenstrualPeriod => 'First day of last period',
-    DueDateCalculationMethod.conceptionDate => 'Conception date',
-    DueDateCalculationMethod.ivfTransfer => 'Transfer date',
-    DueDateCalculationMethod.ultrasound => 'Scan date',
-    DueDateCalculationMethod.knowDueDate => 'Estimated due date',
-    DueDateCalculationMethod.iDontKnow => '',
+    DatingMethod.lastMenstrualPeriod => 'First day of last period',
+    DatingMethod.conceptionDate => 'Conception date',
+    DatingMethod.ivfTransfer => 'Transfer date',
+    DatingMethod.ultrasound => 'Scan date',
+    DatingMethod.knownDueDate => 'Estimated due date',
+    DatingMethod.providerConfirmed => 'Provider-confirmed due date',
+    DatingMethod.unknown => '',
   };
 
-  DateTime get _firstDate =>
-      _selectedMethod == DueDateCalculationMethod.knowDueDate
-      ? DateTime.now()
-      : DateTime.now().subtract(const Duration(days: 300));
+  DateTime get _firstDate => _isDueDateMethod
+      ? DateUtils.dateOnly(DateTime.now())
+      : DateUtils.dateOnly(DateTime.now().subtract(const Duration(days: 300)));
 
-  DateTime get _lastDate =>
-      _selectedMethod == DueDateCalculationMethod.knowDueDate
-      ? DateTime.now().add(const Duration(days: 300))
-      : DateTime.now();
+  DateTime get _lastDate => _isDueDateMethod
+      ? DateUtils.dateOnly(DateTime.now().add(const Duration(days: 300)))
+      : DateUtils.dateOnly(DateTime.now());
 
   ({DatingResult? result, String? error}) _computeDating() {
-    if (!_requiresDate) return (result: null, error: null);
+    if (!_requiresDate) {
+      return (result: null, error: null);
+    }
 
     final date = _selectedDate;
-    if (date == null) return (result: null, error: null);
+
+    if (date == null) {
+      return (result: null, error: null);
+    }
 
     try {
       final result = switch (_selectedMethod) {
-        DueDateCalculationMethod.lastMenstrualPeriod => eddFromLastPeriod(
+        DatingMethod.lastMenstrualPeriod => eddFromLastPeriod(
           lastPeriod: date,
           cyclesRegular: _cyclesRegular,
           cycleLengthDays: _cycleLengthDays,
         ),
-        DueDateCalculationMethod.conceptionDate => eddFromConception(date),
-        DueDateCalculationMethod.ivfTransfer => eddFromIvfTransfer(
+        DatingMethod.conceptionDate => eddFromConception(date),
+        DatingMethod.ivfTransfer => eddFromIvfTransfer(
           transferDate: date,
           embryoAgeDays: _embryoAgeDays,
         ),
-        DueDateCalculationMethod.ultrasound => eddFromUltrasound(
+        DatingMethod.ultrasound => eddFromUltrasound(
           scanDate: date,
           gestationalWeeks: _gestationalWeeks,
           gestationalDays: _gestationalDays,
         ),
-        DueDateCalculationMethod.knowDueDate => providerConfirmedEdd(date),
-        DueDateCalculationMethod.iDontKnow => throw StateError('Unreachable'),
+        DatingMethod.knownDueDate => DatingResult(
+          edd: date,
+          method: DatingMethod.knownDueDate,
+          confidence: DatingConfidence.good,
+          note: 'Based on the due date you provided; not independently confirmed.',
+        ),
+        DatingMethod.providerConfirmed => providerConfirmedEdd(date),
+        DatingMethod.unknown => null,
       };
+
       return (result: result, error: null);
     } on ArgumentError catch (e) {
       return (result: null, error: e.message?.toString());
@@ -144,26 +154,33 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
     widget.onDatingChanged?.call(_computeDating().result);
   }
 
-  void _selectMethod(DueDateCalculationMethod? value) {
+  void _selectMethod(DatingMethod? value) {
     if (value == null) return;
+
     setState(() {
       _selectedMethod = value;
       _selectedDate = null;
       _cyclesRegular = true;
       _cycleLengthDays = 28;
+      _gestationalWeeks = 8;
+      _gestationalDays = 0;
+      _embryoAgeDays = 5;
       _dateController.clear();
     });
+
     _emitDating();
   }
 
   Future<void> _pickDate() async {
-    final fallback = _selectedMethod == DueDateCalculationMethod.knowDueDate
-        ? _firstDate
-        : _lastDate;
+    final fallback = _isDueDateMethod ? _firstDate : _lastDate;
+
     final rawInitial = _selectedDate ?? fallback;
+
     final initial = rawInitial.isBefore(_firstDate)
         ? _firstDate
-        : (rawInitial.isAfter(_lastDate) ? _lastDate : rawInitial);
+        : rawInitial.isAfter(_lastDate)
+        ? _lastDate
+        : rawInitial;
 
     final picked = await showDatePicker(
       context: context,
@@ -171,11 +188,13 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
       firstDate: _firstDate,
       lastDate: _lastDate,
     );
+
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
         _dateController.text = picked.dateFormat();
       });
+
       _emitDating();
     }
   }
@@ -199,6 +218,7 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
           ),
           Gap.vMin,
         ],
+
         if (widget.questionsPage.subTitle.isNotEmpty) ...[
           Text(
             widget.questionsPage.subTitle,
@@ -209,13 +229,16 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
           ),
           Gap.vGroup,
         ],
+
         Text(
           'How would you like to calculate?',
           style: textTheme.bodyLarge?.copyWith(color: colors.onSurfaceVariant),
         ),
+
         Gap.vMin,
-        DropdownFlutter<DueDateCalculationMethod>(
-          items: DueDateCalculationMethod.values,
+
+        DropdownFlutter<DatingMethod>(
+          items: DatingMethod.values,
           initialItem: _selectedMethod,
           headerBuilder: (context, selectedItem, enabled) {
             return Text(
@@ -236,6 +259,7 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
           },
           onChanged: _selectMethod,
         ),
+
         if (_requiresDate) ...[
           Gap.vStandard,
           Text(
@@ -259,7 +283,8 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
             ),
           ),
         ],
-        if (_selectedMethod == DueDateCalculationMethod.ultrasound) ...[
+
+        if (_selectedMethod == DatingMethod.ultrasound) ...[
           Gap.vStandard,
           Row(
             children: [
@@ -276,7 +301,11 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
                   ),
                   onChanged: (v) {
                     if (v == null) return;
-                    setState(() => _gestationalWeeks = v);
+
+                    setState(() {
+                      _gestationalWeeks = v;
+                    });
+
                     _emitDating();
                   },
                 ),
@@ -295,7 +324,11 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
                   ),
                   onChanged: (v) {
                     if (v == null) return;
-                    setState(() => _gestationalDays = v);
+
+                    setState(() {
+                      _gestationalDays = v;
+                    });
+
                     _emitDating();
                   },
                 ),
@@ -303,7 +336,8 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
             ],
           ),
         ],
-        if (_selectedMethod == DueDateCalculationMethod.ivfTransfer) ...[
+
+        if (_selectedMethod == DatingMethod.ivfTransfer) ...[
           Gap.vStandard,
           DropdownButtonFormField<int>(
             initialValue: _embryoAgeDays,
@@ -321,13 +355,17 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
                 .toList(),
             onChanged: (v) {
               if (v == null) return;
-              setState(() => _embryoAgeDays = v);
+
+              setState(() {
+                _embryoAgeDays = v;
+              });
+
               _emitDating();
             },
           ),
         ],
-        if (_selectedMethod ==
-            DueDateCalculationMethod.lastMenstrualPeriod) ...[
+
+        if (_selectedMethod == DatingMethod.lastMenstrualPeriod) ...[
           Gap.vMin,
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
@@ -339,13 +377,16 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
             onChanged: (v) {
               setState(() {
                 _cyclesRegular = v;
+
                 if (v) {
                   _cycleLengthDays = 28;
                 }
               });
+
               _emitDating();
             },
           ),
+
           if (!_cyclesRegular) ...[
             Gap.vMin,
             Text(
@@ -375,13 +416,18 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
               },
               onChanged: (value) {
                 if (value == null) return;
-                setState(() => _cycleLengthDays = value);
+
+                setState(() {
+                  _cycleLengthDays = value;
+                });
+
                 _emitDating();
               },
             ),
           ],
         ],
-        if (_selectedMethod == DueDateCalculationMethod.iDontKnow) ...[
+
+        if (_selectedMethod == DatingMethod.unknown) ...[
           Gap.vStandard,
           Text(
             'No worries—you can start with gentle daily check-ins now and add or confirm a due date later.',
@@ -390,6 +436,7 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
             ),
           ),
         ],
+
         if (datingState.error != null) ...[
           Gap.vMin,
           Text(
@@ -398,13 +445,72 @@ class _OnboardingPregnancyState extends State<OnboardingPregnancy> {
           ),
         ] else if (datingState.result != null) ...[
           Gap.vStandard,
-          // TODO: UPDATE TO FANCY CONTAINER
-          Text(
-            'Estimated due date: ${datingState.result!.edd.dateFormat()}',
-            style: textTheme.titleMedium?.copyWith(
-              color: colors.primary,
-              fontWeight: FontWeight.w600,
-            ),
+          Builder(
+            builder: (context) {
+              final result = datingState.result!;
+              final age = gestationalAge(result.edd);
+              final currentTrimester = trimester(result.edd);
+
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.standard),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppSpacing.standard),
+                  color: colors.primaryContainer,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.tight,
+                        vertical: AppSpacing.tight / 2,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(999),
+                        color: colors.surface,
+                      ),
+                      child: Text(
+                        result.confidence == DatingConfidence.confirmed
+                            ? 'Confirmed'
+                            : 'Estimate',
+                        style: textTheme.labelMedium?.copyWith(
+                          color: colors.onSurface,
+                        ),
+                      ),
+                    ),
+
+                    Gap.vMin,
+
+                    Text(
+                      'Estimated due date',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colors.onPrimaryContainer,
+                      ),
+                    ),
+
+                    Gap.vMin,
+
+                    Text(
+                      result.edd.dateFormat(),
+                      style: textTheme.headlineMedium?.copyWith(
+                        color: colors.onPrimaryContainer,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+
+                    Gap.vMin,
+
+                    Text(
+                      '${age.weeks}w ${age.days}d • Trimester $currentTrimester',
+                      style: textTheme.bodyLarge?.copyWith(
+                        color: colors.onPrimaryContainer,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ],

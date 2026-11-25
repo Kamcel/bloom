@@ -14,9 +14,10 @@ _OnboardingData _$OnboardingDataFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['dateOfBirth'] as String),
       country: json['country'] as String?,
       state: json['state'] as String?,
-      pregnancyDatingMethod: $enumDecodeNullable(
-        _$PregnancyDatingMethodEnumMap,
-        json['pregnancyDatingMethod'],
+      city: json['city'] as String?,
+      datingMethod: $enumDecodeNullable(
+        _$DatingMethodEnumMap,
+        json['datingMethod'],
       ),
       estimatedDueDate: json['estimatedDueDate'] == null
           ? null
@@ -35,8 +36,8 @@ Map<String, dynamic> _$OnboardingDataToJson(_OnboardingData instance) =>
       'dateOfBirth': instance.dateOfBirth?.toIso8601String(),
       'country': instance.country,
       'state': instance.state,
-      'pregnancyDatingMethod':
-          _$PregnancyDatingMethodEnumMap[instance.pregnancyDatingMethod],
+      'city': instance.city,
+      'datingMethod': _$DatingMethodEnumMap[instance.datingMethod],
       'estimatedDueDate': instance.estimatedDueDate?.toIso8601String(),
       'lastMensuralPeriod': instance.lastMensuralPeriod?.toIso8601String(),
       'pregnancyWeek': instance.pregnancyWeek,
@@ -44,8 +45,12 @@ Map<String, dynamic> _$OnboardingDataToJson(_OnboardingData instance) =>
       'isFirstPregnancy': instance.isFirstPregnancy,
     };
 
-const _$PregnancyDatingMethodEnumMap = {
-  PregnancyDatingMethod.estimatedDueDate: 'estimatedDueDate',
-  PregnancyDatingMethod.lastMenstrualPeriod: 'lastMenstrualPeriod',
-  PregnancyDatingMethod.clinicianProvided: 'clinicianProvided',
+const _$DatingMethodEnumMap = {
+  DatingMethod.lastMenstrualPeriod: 'lastMenstrualPeriod',
+  DatingMethod.conceptionDate: 'conceptionDate',
+  DatingMethod.ivfTransfer: 'ivfTransfer',
+  DatingMethod.ultrasound: 'ultrasound',
+  DatingMethod.knownDueDate: 'knownDueDate',
+  DatingMethod.unknown: 'unknown',
+  DatingMethod.providerConfirmed: 'providerConfirmed',
 };

@@ -1,3 +1,6 @@
+import 'package:bloom/core/models/dating_method.dart';
+import 'package:bloom/core/models/dating_result.dart';
+
 /// All dates are calendar dates held as UTC midnight, so time of day and
 /// daylight saving never move a result by a day. Store them in Drift as
 /// 'yyyy-MM-dd' text, and keep the method and inputs for recalculation.
@@ -6,25 +9,6 @@ const int _conceptionToEddDays = 266; // 38 weeks
 
 DateTime dateOnly(DateTime d) => DateTime.utc(d.year, d.month, d.day);
 DateTime _today([DateTime? now]) => dateOnly(now ?? DateTime.now());
-
-enum DatingMethod { providerConfirmed, ultrasound, ivfTransfer, conception, lastPeriod }
-
-/// `low` means: show it as an estimate and prompt for a scan or confirmation.
-enum DatingConfidence { confirmed, good, low }
-
-class DatingResult {
-  const DatingResult({
-    required this.edd,
-    required this.method,
-    required this.confidence,
-    this.note,
-  });
-  final DateTime edd;
-  final DatingMethod method;
-  final DatingConfidence confidence;
-  final String? note;
-  bool get needsConfirmation => confidence == DatingConfidence.low;
-}
 
 class GestationalAge {
   const GestationalAge(this.weeks, this.days);
@@ -36,10 +20,10 @@ class GestationalAge {
 
 /// A due date given by her doctor or midwife.
 DatingResult providerConfirmedEdd(DateTime edd) => DatingResult(
-      edd: dateOnly(edd),
-      method: DatingMethod.providerConfirmed,
-      confidence: DatingConfidence.confirmed,
-    );
+  edd: dateOnly(edd),
+  method: DatingMethod.providerConfirmed,
+  confidence: DatingConfidence.confirmed,
+);
 
 /// LMP method. Cycle length only adjusts the date for regular cycles of
 /// 21 to 35 days. Otherwise the date is a low-confidence estimate.
@@ -61,12 +45,12 @@ DatingResult eddFromLastPeriod({
   final usable = cyclesRegular && length >= 21 && length <= 35;
   return DatingResult(
     edd: lmp.add(Duration(days: _fullTermDays + (usable ? length - 28 : 0))),
-    method: DatingMethod.lastPeriod,
+    method: DatingMethod.lastMenstrualPeriod,
     confidence: usable ? DatingConfidence.good : DatingConfidence.low,
     note: usable
         ? null
         : 'When cycles vary, a last-period date can be unreliable. A dating '
-            'scan gives a more accurate date, and your midwife or doctor can confirm it.',
+              'scan gives a more accurate date, and your midwife or doctor can confirm it.',
   );
 }
 
@@ -104,7 +88,7 @@ DatingResult eddFromConception(DateTime conceptionDate, {DateTime? now}) {
   }
   return DatingResult(
     edd: c.add(const Duration(days: _conceptionToEddDays)),
-    method: DatingMethod.conception,
+    method: DatingMethod.conceptionDate,
     confidence: DatingConfidence.good,
   );
 }
@@ -133,7 +117,8 @@ DatingResult eddFromIvfTransfer({
 int daysUntilDue(DateTime edd, {DateTime? now}) =>
     dateOnly(edd).difference(_today(now)).inDays; // negative = past the date
 
-bool isPastDueDate(DateTime edd, {DateTime? now}) => daysUntilDue(edd, now: now) < 0;
+bool isPastDueDate(DateTime edd, {DateTime? now}) =>
+    daysUntilDue(edd, now: now) < 0;
 
 int weeksUntilDue(DateTime edd, {DateTime? now}) {
   final d = daysUntilDue(edd, now: now);

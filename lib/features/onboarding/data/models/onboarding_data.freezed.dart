@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$OnboardingData {
 
- String? get name; DateTime? get dateOfBirth; String? get country; String? get state; PregnancyDatingMethod? get pregnancyDatingMethod; DateTime? get estimatedDueDate; DateTime? get lastMensuralPeriod; int? get pregnancyWeek; int? get pregnancyDay; bool? get isFirstPregnancy;
+ String? get name; DateTime? get dateOfBirth; String? get country; String? get state; String? get city; DatingMethod? get datingMethod; DateTime? get estimatedDueDate; DateTime? get lastMensuralPeriod; int? get pregnancyWeek; int? get pregnancyDay; bool? get isFirstPregnancy;
 /// Create a copy of OnboardingData
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +30,20 @@ $OnboardingDataCopyWith<OnboardingData> get copyWith => _$OnboardingDataCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as OnboardingData;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OnboardingData&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.dateOfBirth, _this.dateOfBirth) || other.dateOfBirth == _this.dateOfBirth)&&(identical(other.country, _this.country) || other.country == _this.country)&&(identical(other.state, _this.state) || other.state == _this.state)&&(identical(other.pregnancyDatingMethod, _this.pregnancyDatingMethod) || other.pregnancyDatingMethod == _this.pregnancyDatingMethod)&&(identical(other.estimatedDueDate, _this.estimatedDueDate) || other.estimatedDueDate == _this.estimatedDueDate)&&(identical(other.lastMensuralPeriod, _this.lastMensuralPeriod) || other.lastMensuralPeriod == _this.lastMensuralPeriod)&&(identical(other.pregnancyWeek, _this.pregnancyWeek) || other.pregnancyWeek == _this.pregnancyWeek)&&(identical(other.pregnancyDay, _this.pregnancyDay) || other.pregnancyDay == _this.pregnancyDay)&&(identical(other.isFirstPregnancy, _this.isFirstPregnancy) || other.isFirstPregnancy == _this.isFirstPregnancy));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OnboardingData&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.dateOfBirth, _this.dateOfBirth) || other.dateOfBirth == _this.dateOfBirth)&&(identical(other.country, _this.country) || other.country == _this.country)&&(identical(other.state, _this.state) || other.state == _this.state)&&(identical(other.city, _this.city) || other.city == _this.city)&&(identical(other.datingMethod, _this.datingMethod) || other.datingMethod == _this.datingMethod)&&(identical(other.estimatedDueDate, _this.estimatedDueDate) || other.estimatedDueDate == _this.estimatedDueDate)&&(identical(other.lastMensuralPeriod, _this.lastMensuralPeriod) || other.lastMensuralPeriod == _this.lastMensuralPeriod)&&(identical(other.pregnancyWeek, _this.pregnancyWeek) || other.pregnancyWeek == _this.pregnancyWeek)&&(identical(other.pregnancyDay, _this.pregnancyDay) || other.pregnancyDay == _this.pregnancyDay)&&(identical(other.isFirstPregnancy, _this.isFirstPregnancy) || other.isFirstPregnancy == _this.isFirstPregnancy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as OnboardingData;
-  return Object.hash(runtimeType,_this.name,_this.dateOfBirth,_this.country,_this.state,_this.pregnancyDatingMethod,_this.estimatedDueDate,_this.lastMensuralPeriod,_this.pregnancyWeek,_this.pregnancyDay,_this.isFirstPregnancy);
+  return Object.hash(runtimeType,_this.name,_this.dateOfBirth,_this.country,_this.state,_this.city,_this.datingMethod,_this.estimatedDueDate,_this.lastMensuralPeriod,_this.pregnancyWeek,_this.pregnancyDay,_this.isFirstPregnancy);
 }
 
 @override
 String toString() {
   final _this = this as OnboardingData;
-  return 'OnboardingData(name: ${_this.name}, dateOfBirth: ${_this.dateOfBirth}, country: ${_this.country}, state: ${_this.state}, pregnancyDatingMethod: ${_this.pregnancyDatingMethod}, estimatedDueDate: ${_this.estimatedDueDate}, lastMensuralPeriod: ${_this.lastMensuralPeriod}, pregnancyWeek: ${_this.pregnancyWeek}, pregnancyDay: ${_this.pregnancyDay}, isFirstPregnancy: ${_this.isFirstPregnancy})';
+  return 'OnboardingData(name: ${_this.name}, dateOfBirth: ${_this.dateOfBirth}, country: ${_this.country}, state: ${_this.state}, city: ${_this.city}, datingMethod: ${_this.datingMethod}, estimatedDueDate: ${_this.estimatedDueDate}, lastMensuralPeriod: ${_this.lastMensuralPeriod}, pregnancyWeek: ${_this.pregnancyWeek}, pregnancyDay: ${_this.pregnancyDay}, isFirstPregnancy: ${_this.isFirstPregnancy})';
 }
 
 
@@ -54,7 +54,7 @@ abstract mixin class $OnboardingDataCopyWith<$Res>  {
   factory $OnboardingDataCopyWith(OnboardingData value, $Res Function(OnboardingData) _then) = _$OnboardingDataCopyWithImpl;
 @useResult
 $Res call({
- String? name, DateTime? dateOfBirth, String? country, String? state, PregnancyDatingMethod? pregnancyDatingMethod, DateTime? estimatedDueDate, DateTime? lastMensuralPeriod, int? pregnancyWeek, int? pregnancyDay, bool? isFirstPregnancy
+ String? name, DateTime? dateOfBirth, String? country, String? state, String? city, DatingMethod? datingMethod, DateTime? estimatedDueDate, DateTime? lastMensuralPeriod, int? pregnancyWeek, int? pregnancyDay, bool? isFirstPregnancy
 });
 
 
@@ -71,14 +71,15 @@ class _$OnboardingDataCopyWithImpl<$Res>
 
 /// Create a copy of OnboardingData
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = freezed,Object? dateOfBirth = freezed,Object? country = freezed,Object? state = freezed,Object? pregnancyDatingMethod = freezed,Object? estimatedDueDate = freezed,Object? lastMensuralPeriod = freezed,Object? pregnancyWeek = freezed,Object? pregnancyDay = freezed,Object? isFirstPregnancy = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = freezed,Object? dateOfBirth = freezed,Object? country = freezed,Object? state = freezed,Object? city = freezed,Object? datingMethod = freezed,Object? estimatedDueDate = freezed,Object? lastMensuralPeriod = freezed,Object? pregnancyWeek = freezed,Object? pregnancyDay = freezed,Object? isFirstPregnancy = freezed,}) {
   return _then(OnboardingData(
 name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,dateOfBirth: freezed == dateOfBirth ? _self.dateOfBirth : dateOfBirth // ignore: cast_nullable_to_non_nullable
 as DateTime?,country: freezed == country ? _self.country : country // ignore: cast_nullable_to_non_nullable
 as String?,state: freezed == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
-as String?,pregnancyDatingMethod: freezed == pregnancyDatingMethod ? _self.pregnancyDatingMethod : pregnancyDatingMethod // ignore: cast_nullable_to_non_nullable
-as PregnancyDatingMethod?,estimatedDueDate: freezed == estimatedDueDate ? _self.estimatedDueDate : estimatedDueDate // ignore: cast_nullable_to_non_nullable
+as String?,city: freezed == city ? _self.city : city // ignore: cast_nullable_to_non_nullable
+as String?,datingMethod: freezed == datingMethod ? _self.datingMethod : datingMethod // ignore: cast_nullable_to_non_nullable
+as DatingMethod?,estimatedDueDate: freezed == estimatedDueDate ? _self.estimatedDueDate : estimatedDueDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,lastMensuralPeriod: freezed == lastMensuralPeriod ? _self.lastMensuralPeriod : lastMensuralPeriod // ignore: cast_nullable_to_non_nullable
 as DateTime?,pregnancyWeek: freezed == pregnancyWeek ? _self.pregnancyWeek : pregnancyWeek // ignore: cast_nullable_to_non_nullable
 as int?,pregnancyDay: freezed == pregnancyDay ? _self.pregnancyDay : pregnancyDay // ignore: cast_nullable_to_non_nullable
@@ -168,10 +169,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? name,  DateTime? dateOfBirth,  String? country,  String? state,  PregnancyDatingMethod? pregnancyDatingMethod,  DateTime? estimatedDueDate,  DateTime? lastMensuralPeriod,  int? pregnancyWeek,  int? pregnancyDay,  bool? isFirstPregnancy)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? name,  DateTime? dateOfBirth,  String? country,  String? state,  String? city,  DatingMethod? datingMethod,  DateTime? estimatedDueDate,  DateTime? lastMensuralPeriod,  int? pregnancyWeek,  int? pregnancyDay,  bool? isFirstPregnancy)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OnboardingData() when $default != null:
-return $default(_that.name,_that.dateOfBirth,_that.country,_that.state,_that.pregnancyDatingMethod,_that.estimatedDueDate,_that.lastMensuralPeriod,_that.pregnancyWeek,_that.pregnancyDay,_that.isFirstPregnancy);case _:
+return $default(_that.name,_that.dateOfBirth,_that.country,_that.state,_that.city,_that.datingMethod,_that.estimatedDueDate,_that.lastMensuralPeriod,_that.pregnancyWeek,_that.pregnancyDay,_that.isFirstPregnancy);case _:
   return orElse();
 
 }
@@ -189,10 +190,10 @@ return $default(_that.name,_that.dateOfBirth,_that.country,_that.state,_that.pre
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? name,  DateTime? dateOfBirth,  String? country,  String? state,  PregnancyDatingMethod? pregnancyDatingMethod,  DateTime? estimatedDueDate,  DateTime? lastMensuralPeriod,  int? pregnancyWeek,  int? pregnancyDay,  bool? isFirstPregnancy)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? name,  DateTime? dateOfBirth,  String? country,  String? state,  String? city,  DatingMethod? datingMethod,  DateTime? estimatedDueDate,  DateTime? lastMensuralPeriod,  int? pregnancyWeek,  int? pregnancyDay,  bool? isFirstPregnancy)  $default,) {final _that = this;
 switch (_that) {
 case _OnboardingData():
-return $default(_that.name,_that.dateOfBirth,_that.country,_that.state,_that.pregnancyDatingMethod,_that.estimatedDueDate,_that.lastMensuralPeriod,_that.pregnancyWeek,_that.pregnancyDay,_that.isFirstPregnancy);case _:
+return $default(_that.name,_that.dateOfBirth,_that.country,_that.state,_that.city,_that.datingMethod,_that.estimatedDueDate,_that.lastMensuralPeriod,_that.pregnancyWeek,_that.pregnancyDay,_that.isFirstPregnancy);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -209,10 +210,10 @@ return $default(_that.name,_that.dateOfBirth,_that.country,_that.state,_that.pre
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? name,  DateTime? dateOfBirth,  String? country,  String? state,  PregnancyDatingMethod? pregnancyDatingMethod,  DateTime? estimatedDueDate,  DateTime? lastMensuralPeriod,  int? pregnancyWeek,  int? pregnancyDay,  bool? isFirstPregnancy)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? name,  DateTime? dateOfBirth,  String? country,  String? state,  String? city,  DatingMethod? datingMethod,  DateTime? estimatedDueDate,  DateTime? lastMensuralPeriod,  int? pregnancyWeek,  int? pregnancyDay,  bool? isFirstPregnancy)?  $default,) {final _that = this;
 switch (_that) {
 case _OnboardingData() when $default != null:
-return $default(_that.name,_that.dateOfBirth,_that.country,_that.state,_that.pregnancyDatingMethod,_that.estimatedDueDate,_that.lastMensuralPeriod,_that.pregnancyWeek,_that.pregnancyDay,_that.isFirstPregnancy);case _:
+return $default(_that.name,_that.dateOfBirth,_that.country,_that.state,_that.city,_that.datingMethod,_that.estimatedDueDate,_that.lastMensuralPeriod,_that.pregnancyWeek,_that.pregnancyDay,_that.isFirstPregnancy);case _:
   return null;
 
 }
@@ -224,14 +225,15 @@ return $default(_that.name,_that.dateOfBirth,_that.country,_that.state,_that.pre
 @JsonSerializable()
 
 class _OnboardingData extends OnboardingData {
-  const _OnboardingData({this.name, this.dateOfBirth, this.country, this.state, this.pregnancyDatingMethod, this.estimatedDueDate, this.lastMensuralPeriod, this.pregnancyWeek, this.pregnancyDay, this.isFirstPregnancy}): super._();
+  const _OnboardingData({this.name, this.dateOfBirth, this.country, this.state, this.city, this.datingMethod, this.estimatedDueDate, this.lastMensuralPeriod, this.pregnancyWeek, this.pregnancyDay, this.isFirstPregnancy}): super._();
   factory _OnboardingData.fromJson(Map<String, dynamic> json) => _$OnboardingDataFromJson(json);
 
 @override final  String? name;
 @override final  DateTime? dateOfBirth;
 @override final  String? country;
 @override final  String? state;
-@override final  PregnancyDatingMethod? pregnancyDatingMethod;
+@override final  String? city;
+@override final  DatingMethod? datingMethod;
 @override final  DateTime? estimatedDueDate;
 @override final  DateTime? lastMensuralPeriod;
 @override final  int? pregnancyWeek;
@@ -251,18 +253,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OnboardingData&&(identical(other.name, name) || other.name == name)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.country, country) || other.country == country)&&(identical(other.state, state) || other.state == state)&&(identical(other.pregnancyDatingMethod, pregnancyDatingMethod) || other.pregnancyDatingMethod == pregnancyDatingMethod)&&(identical(other.estimatedDueDate, estimatedDueDate) || other.estimatedDueDate == estimatedDueDate)&&(identical(other.lastMensuralPeriod, lastMensuralPeriod) || other.lastMensuralPeriod == lastMensuralPeriod)&&(identical(other.pregnancyWeek, pregnancyWeek) || other.pregnancyWeek == pregnancyWeek)&&(identical(other.pregnancyDay, pregnancyDay) || other.pregnancyDay == pregnancyDay)&&(identical(other.isFirstPregnancy, isFirstPregnancy) || other.isFirstPregnancy == isFirstPregnancy));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OnboardingData&&(identical(other.name, name) || other.name == name)&&(identical(other.dateOfBirth, dateOfBirth) || other.dateOfBirth == dateOfBirth)&&(identical(other.country, country) || other.country == country)&&(identical(other.state, state) || other.state == state)&&(identical(other.city, city) || other.city == city)&&(identical(other.datingMethod, datingMethod) || other.datingMethod == datingMethod)&&(identical(other.estimatedDueDate, estimatedDueDate) || other.estimatedDueDate == estimatedDueDate)&&(identical(other.lastMensuralPeriod, lastMensuralPeriod) || other.lastMensuralPeriod == lastMensuralPeriod)&&(identical(other.pregnancyWeek, pregnancyWeek) || other.pregnancyWeek == pregnancyWeek)&&(identical(other.pregnancyDay, pregnancyDay) || other.pregnancyDay == pregnancyDay)&&(identical(other.isFirstPregnancy, isFirstPregnancy) || other.isFirstPregnancy == isFirstPregnancy));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,name,dateOfBirth,country,state,pregnancyDatingMethod,estimatedDueDate,lastMensuralPeriod,pregnancyWeek,pregnancyDay,isFirstPregnancy);
+    return Object.hash(runtimeType,name,dateOfBirth,country,state,city,datingMethod,estimatedDueDate,lastMensuralPeriod,pregnancyWeek,pregnancyDay,isFirstPregnancy);
 }
 
 @override
 String toString() {
-    return 'OnboardingData(name: $name, dateOfBirth: $dateOfBirth, country: $country, state: $state, pregnancyDatingMethod: $pregnancyDatingMethod, estimatedDueDate: $estimatedDueDate, lastMensuralPeriod: $lastMensuralPeriod, pregnancyWeek: $pregnancyWeek, pregnancyDay: $pregnancyDay, isFirstPregnancy: $isFirstPregnancy)';
+    return 'OnboardingData(name: $name, dateOfBirth: $dateOfBirth, country: $country, state: $state, city: $city, datingMethod: $datingMethod, estimatedDueDate: $estimatedDueDate, lastMensuralPeriod: $lastMensuralPeriod, pregnancyWeek: $pregnancyWeek, pregnancyDay: $pregnancyDay, isFirstPregnancy: $isFirstPregnancy)';
 }
 
 
@@ -273,7 +275,7 @@ abstract mixin class _$OnboardingDataCopyWith<$Res> implements $OnboardingDataCo
   factory _$OnboardingDataCopyWith(_OnboardingData value, $Res Function(_OnboardingData) _then) = __$OnboardingDataCopyWithImpl;
 @override @useResult
 $Res call({
- String? name, DateTime? dateOfBirth, String? country, String? state, PregnancyDatingMethod? pregnancyDatingMethod, DateTime? estimatedDueDate, DateTime? lastMensuralPeriod, int? pregnancyWeek, int? pregnancyDay, bool? isFirstPregnancy
+ String? name, DateTime? dateOfBirth, String? country, String? state, String? city, DatingMethod? datingMethod, DateTime? estimatedDueDate, DateTime? lastMensuralPeriod, int? pregnancyWeek, int? pregnancyDay, bool? isFirstPregnancy
 });
 
 
@@ -290,14 +292,15 @@ class __$OnboardingDataCopyWithImpl<$Res>
 
 /// Create a copy of OnboardingData
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = freezed,Object? dateOfBirth = freezed,Object? country = freezed,Object? state = freezed,Object? pregnancyDatingMethod = freezed,Object? estimatedDueDate = freezed,Object? lastMensuralPeriod = freezed,Object? pregnancyWeek = freezed,Object? pregnancyDay = freezed,Object? isFirstPregnancy = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = freezed,Object? dateOfBirth = freezed,Object? country = freezed,Object? state = freezed,Object? city = freezed,Object? datingMethod = freezed,Object? estimatedDueDate = freezed,Object? lastMensuralPeriod = freezed,Object? pregnancyWeek = freezed,Object? pregnancyDay = freezed,Object? isFirstPregnancy = freezed,}) {
   return _then(_OnboardingData(
 name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,dateOfBirth: freezed == dateOfBirth ? _self.dateOfBirth : dateOfBirth // ignore: cast_nullable_to_non_nullable
 as DateTime?,country: freezed == country ? _self.country : country // ignore: cast_nullable_to_non_nullable
 as String?,state: freezed == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
-as String?,pregnancyDatingMethod: freezed == pregnancyDatingMethod ? _self.pregnancyDatingMethod : pregnancyDatingMethod // ignore: cast_nullable_to_non_nullable
-as PregnancyDatingMethod?,estimatedDueDate: freezed == estimatedDueDate ? _self.estimatedDueDate : estimatedDueDate // ignore: cast_nullable_to_non_nullable
+as String?,city: freezed == city ? _self.city : city // ignore: cast_nullable_to_non_nullable
+as String?,datingMethod: freezed == datingMethod ? _self.datingMethod : datingMethod // ignore: cast_nullable_to_non_nullable
+as DatingMethod?,estimatedDueDate: freezed == estimatedDueDate ? _self.estimatedDueDate : estimatedDueDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,lastMensuralPeriod: freezed == lastMensuralPeriod ? _self.lastMensuralPeriod : lastMensuralPeriod // ignore: cast_nullable_to_non_nullable
 as DateTime?,pregnancyWeek: freezed == pregnancyWeek ? _self.pregnancyWeek : pregnancyWeek // ignore: cast_nullable_to_non_nullable
 as int?,pregnancyDay: freezed == pregnancyDay ? _self.pregnancyDay : pregnancyDay // ignore: cast_nullable_to_non_nullable

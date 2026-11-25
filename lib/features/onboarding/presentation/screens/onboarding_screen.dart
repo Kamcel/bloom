@@ -81,7 +81,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   final Widget stepContent = switch (index) {
                     0 => OnbaordingPersonal(questionsPage: page),
                     1 => OnboardingPregnancy(questionsPage: page),
-                    2 => OnboardingExpereince(),
+                    2 => OnboardingExperience(questionsPage: page),
                     _ => OnbaordingPersonal(questionsPage: page),
                   };
 

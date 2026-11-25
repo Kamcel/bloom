@@ -1,7 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'onboarding_questions_page.freezed.dart';
-part 'onboarding_questions_page.g.dart';
 
 // E -- Entity: ClassName represents a description
 @freezed

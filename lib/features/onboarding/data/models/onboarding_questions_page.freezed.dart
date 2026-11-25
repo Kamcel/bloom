@@ -12,7 +12,6 @@ part of 'onboarding_questions_page.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$OnboardingQuestionsPage {
 
@@ -23,8 +22,6 @@ mixin _$OnboardingQuestionsPage {
 @pragma('vm:prefer-inline')
 $OnboardingQuestionsPageCopyWith<OnboardingQuestionsPage> get copyWith => _$OnboardingQuestionsPageCopyWithImpl<OnboardingQuestionsPage>(this as OnboardingQuestionsPage, _$identity);
 
-  /// Serializes this OnboardingQuestionsPage to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
@@ -33,7 +30,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is OnboardingQuestionsPage&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.subTitle, _this.subTitle) || other.subTitle == _this.subTitle));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode {
   final _this = this as OnboardingQuestionsPage;
@@ -213,11 +210,11 @@ return $default(_that.title,_that.subTitle);case _:
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _OnboardingQuestionsPage extends OnboardingQuestionsPage {
   const _OnboardingQuestionsPage({required this.title, required this.subTitle}): super._();
-  factory _OnboardingQuestionsPage.fromJson(Map<String, dynamic> json) => _$OnboardingQuestionsPageFromJson(json);
+  
 
 @override final  String title;
 @override final  String subTitle;
@@ -228,17 +225,14 @@ class _OnboardingQuestionsPage extends OnboardingQuestionsPage {
 @pragma('vm:prefer-inline')
 _$OnboardingQuestionsPageCopyWith<_OnboardingQuestionsPage> get copyWith => __$OnboardingQuestionsPageCopyWithImpl<_OnboardingQuestionsPage>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$OnboardingQuestionsPageToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _OnboardingQuestionsPage&&(identical(other.title, title) || other.title == title)&&(identical(other.subTitle, subTitle) || other.subTitle == subTitle));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode {
     return Object.hash(runtimeType,title,subTitle);
