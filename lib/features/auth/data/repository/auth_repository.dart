@@ -11,11 +11,11 @@ abstract class AuthRepository {
 
   Future<void> signOut();
 
-  Future<UserAuth> sendPasswordResetEmail({required String email});
+  Future<void> sendPasswordResetEmail({required String email});
 
-  Future<void> sendEmailConfirmation();
+  Future<void> sendEmailConfirmation({required String email});
 
-  Future<UserAuth> signInWithGoogle();
+  Future<void> signInWithGoogle();
 
   Future<UserAuth?> getCurrentUser();
 
