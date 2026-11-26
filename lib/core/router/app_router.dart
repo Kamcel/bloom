@@ -52,8 +52,8 @@ GoRouter createRouter({String? initialLocation}) {
               subTitle: 'We\'ll ask you a few questions to personalize your experience',
             ),
             OnboardingQuestionsPage(
-              title: 'Your pregnancy journey',
-              subTitle: 'We\'ll ask you a few questions to personalize your experience',
+              title: 'Is this your first pregnancy?',
+              subTitle: 'It helps Bloom understand your journey. There\'s no judgement, and no wrong answer.',
             ),
           ],
         ),

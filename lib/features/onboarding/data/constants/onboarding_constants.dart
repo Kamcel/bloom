@@ -10,7 +10,7 @@ const List<OnboardingQuestionsPage> onboardingQuestions = [
     subTitle: 'This helps Bloom personalize your updates. Dates are estimates, and you can change them anytime.',
   ),
   OnboardingQuestionsPage(
-    title: 'Is this your first pregnancy',
+    title: 'Is this your first pregnancy?',
     subTitle: 'It helps Bloom understand your journey. There\'s no judgement, and no wrong answer.',
   ),
 ];

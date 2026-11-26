@@ -25,20 +25,16 @@ extension DatingMethodLabel on DatingMethod {
 
 class OnboardingPregnancy extends ConsumerStatefulWidget {
   final OnboardingQuestionsPage questionsPage;
-  final ValueChanged<DatingResult?>? onDatingChanged;
 
-  const OnboardingPregnancy({
-    super.key,
-    required this.questionsPage,
-    this.onDatingChanged,
-  });
+  const OnboardingPregnancy({super.key, required this.questionsPage});
 
   @override
   ConsumerState<OnboardingPregnancy> createState() =>
       _OnboardingPregnancyState();
 }
 
-class _OnboardingPregnancyState extends ConsumerState<OnboardingPregnancy> {
+class _OnboardingPregnancyState extends ConsumerState<OnboardingPregnancy>
+    with AutomaticKeepAliveClientMixin {
   static const List<int> _cycleLengths = [
     20,
     21,
@@ -77,7 +73,27 @@ class _OnboardingPregnancyState extends ConsumerState<OnboardingPregnancy> {
 
   int _embryoAgeDays = 5;
 
-  bool _initializedFromController = false;
+  // Keeps the page alive when the user moves to another step and back, so the
+  // dropdowns are not rebuilt from scratch every time.
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Pages are only built after the controller has loaded, so the saved
+    // answers are available here. Reading once means this page does not
+    // rebuild every time any answer on any page changes.
+    final data = ref.read(onboardingControllerProvider).value?.data;
+    if (data == null) return;
+
+    _restoreFromData(data);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _initializeController();
+    });
+  }
 
   @override
   void dispose() {
@@ -113,31 +129,30 @@ class _OnboardingPregnancyState extends ConsumerState<OnboardingPregnancy> {
     _dateController.text = _selectedDate?.dateFormat() ?? '';
   }
 
-  void _initializeController(OnboardingData data) {
+  /// Writes the defaults shown on screen into the controller in ONE update
+  /// (it used to be up to six, each one rebuilding listeners and restarting
+  /// the autosave timer).
+  void _initializeController() {
     final controller = ref.read(onboardingControllerProvider.notifier);
+    final data = ref.read(onboardingControllerProvider).value?.data;
+    if (data == null) return;
 
-    if (data.datingMethod == null) {
-      controller.updateDatingMethod(_selectedMethod);
-    }
+    final updated = data.copyWith(
+      datingMethod: data.datingMethod ?? _selectedMethod,
+      cyclesRegular: data.cyclesRegular ?? _cyclesRegular,
+      cycleLengthDays: data.cycleLengthDays ?? _cycleLengthDays,
+      ultrasoundGestationalWeeks: data.datingMethod == DatingMethod.ultrasound
+          ? _gestationalWeeks
+          : data.ultrasoundGestationalWeeks,
+      ultrasoundGestationalDays: data.datingMethod == DatingMethod.ultrasound
+          ? _gestationalDays
+          : data.ultrasoundGestationalDays,
+      ivfEmbryoAgeDays: data.datingMethod == DatingMethod.ivfTransfer
+          ? _embryoAgeDays
+          : data.ivfEmbryoAgeDays,
+    );
 
-    if (data.cyclesRegular == null) {
-      controller.updateCycleRegularity(_cyclesRegular);
-    }
-
-    if (data.cycleLengthDays == null) {
-      controller.updateCycleLength(_cycleLengthDays);
-    }
-
-    if (data.datingMethod == DatingMethod.ultrasound) {
-      controller.updateUltrasoundGestationalWeeks(_gestationalWeeks);
-      controller.updateUltrasoundGestationalDays(_gestationalDays);
-    }
-
-    if (data.datingMethod == DatingMethod.ivfTransfer) {
-      controller.updateIVFEmbryoAge(_embryoAgeDays);
-    }
-
-    _emitDating();
+    if (updated != data) controller.updateData(updated);
   }
 
   // ---------------------------------------------------------------------------
@@ -235,10 +250,6 @@ class _OnboardingPregnancyState extends ConsumerState<OnboardingPregnancy> {
     }
   }
 
-  void _emitDating() {
-    widget.onDatingChanged?.call(_computeDating().result);
-  }
-
   // ---------------------------------------------------------------------------
   // Dating method selection
   // ---------------------------------------------------------------------------
@@ -273,26 +284,32 @@ class _OnboardingPregnancyState extends ConsumerState<OnboardingPregnancy> {
       _embryoAgeDays = data?.ivfEmbryoAgeDays ?? 5;
     });
 
-    final controller = ref.read(onboardingControllerProvider.notifier);
+    if (data == null) return;
 
-    controller.updateDatingMethod(value);
-
-    // Keep the user's menstrual-cycle answers when changing methods.
-    if (value == DatingMethod.lastMenstrualPeriod) {
-      controller.updateCycleRegularity(_cyclesRegular);
-      controller.updateCycleLength(_cycleLengthDays);
-    }
-
-    if (value == DatingMethod.ultrasound) {
-      controller.updateUltrasoundGestationalWeeks(_gestationalWeeks);
-      controller.updateUltrasoundGestationalDays(_gestationalDays);
-    }
-
-    if (value == DatingMethod.ivfTransfer) {
-      controller.updateIVFEmbryoAge(_embryoAgeDays);
-    }
-
-    _emitDating();
+    // One update for everything that changes with the method.
+    ref
+        .read(onboardingControllerProvider.notifier)
+        .updateData(
+          data.copyWith(
+            datingMethod: value,
+            // Keep the user's menstrual-cycle answers when changing methods.
+            cyclesRegular: value == DatingMethod.lastMenstrualPeriod
+                ? _cyclesRegular
+                : data.cyclesRegular,
+            cycleLengthDays: value == DatingMethod.lastMenstrualPeriod
+                ? _cycleLengthDays
+                : data.cycleLengthDays,
+            ultrasoundGestationalWeeks: value == DatingMethod.ultrasound
+                ? _gestationalWeeks
+                : data.ultrasoundGestationalWeeks,
+            ultrasoundGestationalDays: value == DatingMethod.ultrasound
+                ? _gestationalDays
+                : data.ultrasoundGestationalDays,
+            ivfEmbryoAgeDays: value == DatingMethod.ivfTransfer
+                ? _embryoAgeDays
+                : data.ivfEmbryoAgeDays,
+          ),
+        );
   }
 
   // ---------------------------------------------------------------------------
@@ -347,8 +364,6 @@ class _OnboardingPregnancyState extends ConsumerState<OnboardingPregnancy> {
       case DatingMethod.unknown:
         break;
     }
-
-    _emitDating();
   }
 
   // ---------------------------------------------------------------------------
@@ -365,7 +380,6 @@ class _OnboardingPregnancyState extends ConsumerState<OnboardingPregnancy> {
         .updateCycleRegularity(value);
 
     // Do not reset cycle length when regularity changes.
-    _emitDating();
   }
 
   void _updateCycleLength(int? value) {
@@ -376,8 +390,6 @@ class _OnboardingPregnancyState extends ConsumerState<OnboardingPregnancy> {
     });
 
     ref.read(onboardingControllerProvider.notifier).updateCycleLength(value);
-
-    _emitDating();
   }
 
   // ---------------------------------------------------------------------------
@@ -386,23 +398,10 @@ class _OnboardingPregnancyState extends ConsumerState<OnboardingPregnancy> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // required by AutomaticKeepAliveClientMixin
+
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-
-    final onboardingAsync = ref.watch(onboardingControllerProvider);
-
-    final onboarding = onboardingAsync.asData?.value.data;
-
-    if (!_initializedFromController && onboarding != null) {
-      _restoreFromData(onboarding);
-      _initializedFromController = true;
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _initializeController(onboarding);
-        }
-      });
-    }
 
     final datingState = _computeDating();
 
@@ -585,8 +584,6 @@ class _OnboardingPregnancyState extends ConsumerState<OnboardingPregnancy> {
                       ref
                           .read(onboardingControllerProvider.notifier)
                           .updateUltrasoundGestationalWeeks(v);
-
-                      _emitDating();
                     },
                   ),
                 ),
@@ -614,8 +611,6 @@ class _OnboardingPregnancyState extends ConsumerState<OnboardingPregnancy> {
                       ref
                           .read(onboardingControllerProvider.notifier)
                           .updateUltrasoundGestationalDays(v);
-
-                      _emitDating();
                     },
                   ),
                 ),
@@ -650,8 +645,6 @@ class _OnboardingPregnancyState extends ConsumerState<OnboardingPregnancy> {
                 ref
                     .read(onboardingControllerProvider.notifier)
                     .updateIVFEmbryoAge(v);
-
-                _emitDating();
               },
             ),
           ],

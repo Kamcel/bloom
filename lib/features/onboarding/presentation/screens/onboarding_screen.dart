@@ -1,6 +1,7 @@
 import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/theme/app_utils.dart';
 import 'package:bloom/core/widgets/app_button.dart';
+import 'package:bloom/features/onboarding/data/constants/onboarding_constants.dart';
 import 'package:bloom/features/onboarding/data/models/onboarding_questions_page.dart';
 import 'package:bloom/features/onboarding/presentation/providers/onboarding_controller.dart';
 import 'package:bloom/features/onboarding/presentation/widgets/onbaording_personal.dart';
@@ -15,18 +16,25 @@ class OnboardingScreen extends ConsumerStatefulWidget {
   final List<OnboardingQuestionsPage> pages;
   final VoidCallback? onCompleted;
 
-  const OnboardingScreen({super.key, required this.pages, this.onCompleted});
+  // Defaults to the titles/subtitles in onboarding_constants.dart, so the
+  // router does not need to (and should not) pass its own copies.
+  const OnboardingScreen({
+    super.key,
+    this.pages = onboardingQuestions,
+    this.onCompleted,
+  });
 
   @override
   ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
-  final PageController _pageController = PageController();
+  // Created once the saved step is known, so a returning user lands on it.
+  PageController? _pageController;
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _pageController?.dispose();
     super.dispose();
   }
 
@@ -39,36 +47,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   void _listenToStepChanges() {
-    ref.listen<AsyncValue<OnboardingState>>(onboardingControllerProvider, (
-      previous,
-      next,
-    ) {
-      final nextStep = next.asData?.value.currentStep;
+    // Only fires when the step itself changes, not on every keystroke.
+    ref.listen(
+      onboardingControllerProvider.select((a) => a.value?.currentStep),
+      (previous, next) {
+        final pc = _pageController;
+        if (next == null || pc == null || !pc.hasClients) return;
+        if (pc.page?.round() == next) return;
 
-      if (nextStep == null) return;
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || !_pageController.hasClients) return;
-
-        final previousStep = previous?.asData?.value.currentStep;
-
-        if (previousStep == null) {
-          _pageController.jumpToPage(nextStep);
-        } else if (previousStep != nextStep) {
-          _pageController.animateToPage(
-            nextStep,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic,
-          );
-        }
-      });
-    });
+        pc.animateToPage(
+          next,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+      },
+    );
   }
 
-  Future<void> _goNextOrFinish(OnboardingState onboardingState) async {
+  Future<void> _goNextOrFinish() async {
     final controller = ref.read(onboardingControllerProvider.notifier);
 
-    if (onboardingState.isSubmitting) return;
+    // Read at tap time so we always see the latest answers.
+    final onboardingState = ref.read(onboardingControllerProvider).value;
+    if (onboardingState == null || onboardingState.isSubmitting) return;
 
     // Validate required information before moving forward.
     final validationError = switch (onboardingState.currentStep) {
@@ -103,7 +104,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
   }
 
-  Future<void> _handleBack(OnboardingState onboardingState) async {
+  Future<void> _handleBack() async {
+    final onboardingState = ref.read(onboardingControllerProvider).value;
+    if (onboardingState == null) return;
+
     if (onboardingState.currentStep > 0) {
       try {
         await ref.read(onboardingControllerProvider.notifier).previousStep();
@@ -136,14 +140,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     _listenToStepChanges();
 
     final colors = Theme.of(context).colorScheme;
-    final onboardingAsync = ref.watch(onboardingControllerProvider);
 
-    return onboardingAsync.when(
-      loading: () => Scaffold(
-        backgroundColor: colors.surface,
-        body: const Center(child: CircularProgressIndicator()),
+    // Watch only what this screen draws. Watching the whole state rebuilt the
+    // screen on every keystroke and on every autosave.
+    final view = ref.watch(
+      onboardingControllerProvider.select(
+        (a) => (
+          loaded: a.hasValue,
+          failed: a.hasError && !a.hasValue,
+          step: a.value?.currentStep ?? 0,
+          submitting: a.value?.isSubmitting ?? false,
+        ),
       ),
-      error: (error, stackTrace) => Scaffold(
+    );
+
+    if (view.failed) {
+      return Scaffold(
         backgroundColor: colors.surface,
         body: Center(
           child: Padding(
@@ -166,66 +178,65 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
           ),
         ),
-      ),
-      data: (onboardingState) {
-        final totalSteps = widget.pages.length;
+      );
+    }
 
-        return Scaffold(
-          resizeToAvoidBottomInset: false,
-          backgroundColor: colors.surface,
-          appBar: OnboardingAppbar(
-            currentStep: onboardingState.currentStep + 1,
-            totalSteps: totalSteps,
-            onBack: () => _handleBack(onboardingState),
-          ),
-          body: SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: PageView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    controller: _pageController,
-                    itemCount: widget.pages.length,
-                    itemBuilder: (context, index) {
-                      return _buildStepContent(index);
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.standard,
-                    AppSpacing.tight,
-                    AppSpacing.standard,
-                    AppSpacing.tight,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AppButton(
-                        label:
-                            onboardingState.currentStep ==
-                                widget.pages.length - 1
-                            ? 'Finish'
-                            : 'Continue',
-                        onPressed: onboardingState.isSubmitting
-                            ? null
-                            : () => _goNextOrFinish(onboardingState),
-                      ),
-                      Gap.vMin,
-                      TextButton(
-                        onPressed: onboardingState.isSubmitting
-                            ? null
-                            : () => _goNextOrFinish(onboardingState),
-                        child: const Text('Skip for now'),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+    if (!view.loaded) {
+      return Scaffold(
+        backgroundColor: colors.surface,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final totalSteps = widget.pages.length;
+    final pageController = _pageController ??= PageController(
+      initialPage: view.step.clamp(0, totalSteps - 1).toInt(),
+    );
+
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      backgroundColor: colors.surface,
+      appBar: OnboardingAppbar(
+        currentStep: view.step + 1,
+        totalSteps: totalSteps,
+        onBack: _handleBack,
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: PageView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                controller: pageController,
+                itemCount: totalSteps,
+                itemBuilder: (context, index) => _buildStepContent(index),
+              ),
             ),
-          ),
-        );
-      },
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.standard,
+                AppSpacing.tight,
+                AppSpacing.standard,
+                AppSpacing.tight,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AppButton(
+                    label: view.step == totalSteps - 1 ? 'Finish' : 'Continue',
+                    onPressed: view.submitting ? null : _goNextOrFinish,
+                  ),
+                  Gap.vMin,
+                  TextButton(
+                    onPressed: view.submitting ? null : _goNextOrFinish,
+                    child: const Text('Skip for now'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -1,28 +1,37 @@
 import 'package:bloom/core/theme/app_utils.dart';
 import 'package:bloom/features/onboarding/data/models/onboarding_questions_page.dart';
 import 'package:bloom/features/onboarding/presentation/widgets/onboarding_experience_container.dart';
+import 'package:bloom/features/onboarding/presentation/providers/onboarding_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class OnboardingExperience extends StatefulWidget {
+class OnboardingExperience extends ConsumerStatefulWidget {
   final OnboardingQuestionsPage questionsPage;
-  final ValueChanged<bool>? onChanged;
 
-  const OnboardingExperience({
-    super.key,
-    required this.questionsPage,
-    this.onChanged,
-  });
+  const OnboardingExperience({super.key, required this.questionsPage});
 
   @override
-  State<OnboardingExperience> createState() => _OnboardingExperienceState();
+  ConsumerState<OnboardingExperience> createState() =>
+      _OnboardingExperienceState();
 }
 
-class _OnboardingExperienceState extends State<OnboardingExperience> {
+class _OnboardingExperienceState extends ConsumerState<OnboardingExperience> {
   bool? _isFirstPregnancy;
+
+  @override
+  void initState() {
+    super.initState();
+    // Restore the saved answer.
+    _isFirstPregnancy = ref
+        .read(onboardingControllerProvider)
+        .value
+        ?.data
+        .isFirstPregnancy;
+  }
 
   void _selectOption(bool value) {
     setState(() => _isFirstPregnancy = value);
-    widget.onChanged?.call(value);
+    ref.read(onboardingControllerProvider.notifier).updateFirstPregnancy(value);
   }
 
   @override

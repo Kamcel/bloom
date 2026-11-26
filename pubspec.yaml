@@ -49,6 +49,7 @@ dependencies:
   csc_picker_plus: ^0.0.3
   date_picker_form_field: ^1.0.6
   dropdown_flutter: ^1.3.0
+  sqlite3_flutter_libs: ^0.6.0+eol
 
 dev_dependencies:
   flutter_test:
