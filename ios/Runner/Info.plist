@@ -66,7 +66,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CfBundleURLTypes</key>
+	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 		<key>CFBundleTypeRole</key>
@@ -75,9 +75,9 @@
 		<string>com.bloom.auth</string>
 		<key>CFBundleURLSchemes</key>
 		<array>
-		<string>bloom</key>
+		<string>bloom</string>
 		</array>
 		</dict>
-	</array?
+	</array>
 </dict>
 </plist>
