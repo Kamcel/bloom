@@ -43,7 +43,7 @@ class AuthController extends _$AuthController {
         message: 'Please check your email to verify your account',
       );
     } catch (e) {
-      state = AuthError(e.toString());
+      state = AuthState.authError(e.toString());
     }
   }
 
@@ -56,7 +56,7 @@ class AuthController extends _$AuthController {
         await _repo.signOut();
 
         state = const AuthState.emailVerificationPending(
-          message: 'This user doesn\'t exist. Please sign up',
+          message: 'Please verify your email before accessing Bloom',
         );
       } else {
         state = AuthState.authenticated(user: user);
@@ -67,8 +67,6 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> signOut() async {
-    await _repo.signOut();
-
     try {
       await _repo.signOut();
 
@@ -95,12 +93,16 @@ class AuthController extends _$AuthController {
 
     try {
       await _repo.sendEmailConfirmation(email: email);
+
+      state = const AuthState.emailVerificationPending(
+        message: 'A new confirmation email has been sent',
+      );
     } catch (e) {
       state = AuthState.authError(e.toString());
     }
   }
 
-  Future<void> signInWIthGoogle() async {
+  Future<void> signInWithGoogle() async {
     state = AuthState.authLoading();
 
     try {
