@@ -8,26 +8,32 @@ part 'auth_controller.g.dart';
 @riverpod
 class AuthController extends _$AuthController {
   AuthRepository get _repo => ref.read(authRepositoryProvider);
+
   @override
-  AuthState build() => const AuthState.authInitial();
+  AuthState build() {
+    ref.listen(authStateChangesProvider, (previous, next) {
+      next.when(
+        data: (user) {
+          if (user == null) {
+            state = const AuthState.unauthenticated();
+          } else if (user.emailVerifiedAt == null) {
+            state = const AuthState.emailVerificationPending(
+              message: 'Please verify your email address',
+            );
+          } else {
+            state = AuthState.authenticated(user: user);
+          }
+        },
+        loading: () {
+          state = const AuthState.authLoading();
+        },
+        error: (error, stackTrace) {
+          state = AuthState.authError(error.toString());
+        },
+      );
+    });
 
-  Future<void> initialize() async {
-    state = const AuthState.authLoading();
-    try {
-      final user = await _repo.getCurrentUser();
-
-      if (user == null) {
-        state = const AuthState.unauthenticated();
-      } else if (user.emailVerifiedAt == null) {
-        state = const AuthState.emailVerificationPending(
-          message: 'Please verify your email address',
-        );
-      } else {
-        state = AuthState.authenticated(user: user);
-      }
-    } catch (e) {
-      state = AuthState.authError(e.toString());
-    }
+    return const AuthState.authInitial();
   }
 
   Future<void> signUp({
@@ -36,6 +42,7 @@ class AuthController extends _$AuthController {
     required String password,
   }) async {
     state = const AuthState.authLoading();
+
     try {
       await _repo.signUp(name: name, email: email, password: password);
 
@@ -49,6 +56,7 @@ class AuthController extends _$AuthController {
 
   Future<void> signIn({required String email, required String password}) async {
     state = const AuthState.authLoading();
+
     try {
       final user = await _repo.signIn(email: email, password: password);
 
@@ -67,9 +75,10 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> signOut() async {
+    state = const AuthState.authLoading();
+
     try {
       await _repo.signOut();
-
       state = const AuthState.unauthenticated();
     } catch (e) {
       state = AuthState.authError(e.toString());
@@ -82,14 +91,14 @@ class AuthController extends _$AuthController {
     try {
       await _repo.sendPasswordResetEmail(email: email);
 
-      state = const AuthState.unauthenticated();
+      state = AuthState.passwordResetEmailSent(email: email);
     } catch (e) {
       state = AuthState.authError(e.toString());
     }
   }
 
   Future<void> resendConfirmationEmail({required String email}) async {
-    state = AuthState.authLoading();
+    state = const AuthState.authLoading();
 
     try {
       await _repo.sendEmailConfirmation(email: email);
@@ -103,7 +112,7 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> signInWithGoogle() async {
-    state = AuthState.authLoading();
+    state = const AuthState.authLoading();
 
     try {
       await _repo.signInWithGoogle();

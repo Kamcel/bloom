@@ -12,5 +12,9 @@ abstract class AuthState with _$AuthState {
       Authenticated;
   const factory AuthState.emailVerificationPending({required String message}) =
       EmailVerificationPending;
+  const factory AuthState.passwordResetEmailSent({required String email}) =
+      PasswordResetEmailSent;
+  const factory AuthState.passwordRecovery({required UserAuth user}) =
+      PasswordRecovery;
   const factory AuthState.authError(String message) = AuthError;
 }

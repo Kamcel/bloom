@@ -45,6 +45,7 @@ class AuthRepositoryImplementation implements AuthRepository {
       email: email,
       password: password,
       data: {'name': name},
+      emailRedirectTo: 'bloom://auth-callback',
     );
 
     final user = response.user;
@@ -79,7 +80,10 @@ class AuthRepositoryImplementation implements AuthRepository {
 
   @override
   Future<void> sendPasswordResetEmail({required String email}) async {
-    await _client.auth.resetPasswordForEmail(email);
+    await _client.auth.resetPasswordForEmail(
+      email,
+      redirectTo: 'bloom://auth-callback',
+    );
   }
 
   @override
@@ -89,7 +93,10 @@ class AuthRepositoryImplementation implements AuthRepository {
 
   @override
   Future<void> signInWithGoogle() async {
-    await _client.auth.signInWithOAuth(supabase.OAuthProvider.google);
+    await _client.auth.signInWithOAuth(
+      supabase.OAuthProvider.google,
+      redirectTo: 'bloom://auth-callback',
+    );
   }
 
   @override
@@ -106,5 +113,12 @@ class AuthRepositoryImplementation implements AuthRepository {
 
       return user == null ? null : _mapUser(user);
     });
+  }
+
+  @override
+  Future<void> updatePassword({required String newPassword}) async {
+    await _client.auth.updateUser(
+      supabase.UserAttributes(password: newPassword),
+    );
   }
 }

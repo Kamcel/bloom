@@ -1,3 +1,4 @@
+import 'package:bloom/features/auth/data/models/user_auth.dart';
 import 'package:bloom/features/auth/data/repository/auth_repository.dart';
 import 'package:bloom/features/auth/data/repository/auth_repository_implementation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,4 +12,10 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final client = ref.watch(supabaseClientProvider);
 
   return AuthRepositoryImplementation(client);
+});
+
+final authStateChangesProvider = StreamProvider<UserAuth?>((ref) {
+  final repository = ref.watch(authRepositoryProvider);
+
+  return repository.authStateChanges;
 });
