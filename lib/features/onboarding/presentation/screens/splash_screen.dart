@@ -1,27 +1,31 @@
-import 'dart:async';
 
 import 'package:bloom/core/router/routes.dart';
 import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/theme/app_responsiveness.dart';
 import 'package:bloom/core/theme/app_utils.dart';
+import 'package:bloom/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:bloom/features/auth/presentation/providers/auth_providers.dart';
+import 'package:bloom/features/onboarding/data/providers/onboarding_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fadeAnimation;
   late final Animation<double> _scaleAnimation;
-  Timer? _navigationTimer;
-  bool _didSetupMotion = false;
+
+  bool _didNavigate = false;
+  bool _isInitializing = false;
 
   @override
   void initState() {
@@ -40,15 +44,15 @@ class _SplashScreenState extends State<SplashScreen>
     _scaleAnimation = Tween<double>(
       begin: 0.94,
       end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-  }
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutCubic,
+      ),
+    );
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    if (!_didSetupMotion) {
-      _didSetupMotion = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
 
       if (context.reduceMotion) {
         _controller.value = 1.0;
@@ -56,56 +60,106 @@ class _SplashScreenState extends State<SplashScreen>
         _controller.forward();
       }
 
-      _navigationTimer = Timer(const Duration(milliseconds: 1800), () {
-        if (!mounted) return;
-        context.go(Routes.welcome1);
-      });
+      _initializeApp();
+    });
+  }
+
+  Future<void> _initializeApp() async {
+    if (_isInitializing || _didNavigate) return;
+
+    _isInitializing = true;
+
+    try {
+      // Allow an incoming password-recovery event to be processed.
+      final authState = ref.read(authControllerProvider);
+
+      final isRecovering = authState.maybeWhen(
+        passwordRecovery: (_) => true,
+        orElse: () => false,
+      );
+
+      if (isRecovering) {
+        _navigate(Routes.createNewPasswordScreen);
+        return;
+      }
+
+      // Check the existing Supabase session.
+      final authRepository = ref.read(authRepositoryProvider);
+      final user = await authRepository.getCurrentUser();
+
+      if (!mounted || _didNavigate) return;
+
+      if (user != null) {
+        if (user.emailVerifiedAt != null) {
+          _navigate(Routes.homeScreen);
+        } else {
+          _navigate(Routes.loginScreen);
+        }
+        return;
+      }
+
+      // No authenticated session: check local onboarding completion.
+      final onboardingRepository = ref.read(onboardingRepositoryProvider);
+
+      final onboardingCompleted =
+          await onboardingRepository.isOnboardingCompleted();
+
+      if (!mounted || _didNavigate) return;
+
+      _navigate(
+        onboardingCompleted ? Routes.loginScreen : Routes.welcome1,
+      );
+    } catch (error, stackTrace) {
+      debugPrint('App initialization failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+
+      if (!mounted || _didNavigate) return;
+
+      // Safe fallback when startup checks fail.
+      _navigate(Routes.loginScreen);
     }
   }
 
-  @override
-  void dispose() {
-    _navigationTimer?.cancel();
-    _controller.dispose();
-    super.dispose();
+  void _navigate(String route) {
+    if (!mounted || _didNavigate) return;
+
+    _didNavigate = true;
+    context.go(route);
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(authControllerProvider, (previous, next) {
+      next.maybeWhen(
+        passwordRecovery: (_) {
+          _navigate(Routes.createNewPasswordScreen);
+        },
+        orElse: () {},
+      );
+    });
+
     final colors = context.colors;
+
     return Scaffold(
       backgroundColor: colors.background,
-      body: SafeArea(
-        child: ResponsiveBody(
-          child: Center(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: ScaleTransition(
-                scale: _scaleAnimation,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: AppSpacing.breathing * 3,
-                      height: AppSpacing.breathing * 3,
-                      decoration: BoxDecoration(
-                        color: colors.card,
-                        borderRadius: AppRadius.featureAll,
-                        border: Border.all(color: colors.divider),
-                      ),
-                      padding: const EdgeInsets.all(AppSpacing.standard),
-                      child: SvgPicture.asset(
-                        'assets/images/bloom_logo.svg',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+      body: Center(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: SvgPicture.asset(
+              'assets/images/bloom_logo.svg',
+              // Retain your original logo asset and sizing here.
             ),
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 }
