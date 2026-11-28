@@ -1,27 +1,56 @@
+
+import 'package:bloom/core/router/routes.dart';
 import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/theme/app_utils.dart';
 import 'package:bloom/core/widgets/app_button.dart';
+import 'package:bloom/features/auth/data/models/auth_state.dart';
+import 'package:bloom/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:bloom/features/auth/presentation/widgets/logo_and_tagline.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-class ResetPasswordEmailSentScreen extends StatelessWidget {
-  const ResetPasswordEmailSentScreen({super.key, required this.email});
+class ResetPasswordEmailSentScreen extends ConsumerWidget {
+  const ResetPasswordEmailSentScreen({
+    super.key,
+    required this.email,
+  });
 
   final String email;
 
-  void _onBackToLoginPressed() {
-    // TODO: Navigate to LoginScreen.
-  }
-
-  void _onResendPressed() {
-    // TODO: Resend password reset email.
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final authState = ref.watch(authControllerProvider);
+
+    ref.listen<AuthState>(authControllerProvider, (previous, next) {
+      next.maybeWhen(
+        authError: (message) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+        },
+        passwordResetEmailSent: (_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Reset email sent again.')),
+          );
+        },
+        orElse: () {},
+      );
+    });
+
+    final isSending = authState.maybeWhen(
+      authLoading: () => true,
+      orElse: () => false,
+    );
+
+    Future<void> resendEmail() async {
+      await ref
+          .read(authControllerProvider.notifier)
+          .sendPasswordResetEmail(email: email);
+    }
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -39,9 +68,7 @@ class ResetPasswordEmailSentScreen extends StatelessWidget {
                   logoUrl: 'assets/images/bloom_logo.svg',
                   tagline: 'A little more supported, every step of the way',
                 ),
-
                 const SizedBox(height: AppSpacing.breathing),
-
                 Center(
                   child: Container(
                     padding: const EdgeInsets.all(AppSpacing.breathing),
@@ -56,9 +83,7 @@ class ResetPasswordEmailSentScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 Gap.vBreathing,
-
                 Center(
                   child: Text(
                     'Check your email',
@@ -68,9 +93,7 @@ class ResetPasswordEmailSentScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 Gap.vMin,
-
                 Center(
                   child: Text(
                     'We have sent a password reset link to:',
@@ -80,9 +103,7 @@ class ResetPasswordEmailSentScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 Gap.vMin,
-
                 Center(
                   child: Text(
                     email,
@@ -93,9 +114,7 @@ class ResetPasswordEmailSentScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 Gap.vBreathing,
-
                 Center(
                   child: Text(
                     'Open the link in your email to continue '
@@ -107,23 +126,21 @@ class ResetPasswordEmailSentScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 Gap.vBreathing,
-
                 AppButton(
                   label: 'Back to Log In',
                   isLoading: false,
                   isEnabled: true,
-                  onPressed: _onBackToLoginPressed,
+                  onPressed: () {
+                    context.go(Routes.loginScreen);
+                  },
                 ),
-
                 Gap.vMin,
-
                 Center(
                   child: TextButton(
-                    onPressed: _onResendPressed,
+                    onPressed: isSending ? null : resendEmail,
                     child: Text(
-                      'Resend email',
+                      isSending ? 'Sending...' : 'Resend email',
                       style: textTheme.bodyMedium?.copyWith(
                         color: colors.primary,
                         fontWeight: FontWeight.w600,
