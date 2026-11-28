@@ -1,3 +1,4 @@
+import 'package:bloom/core/router/routes.dart';
 import 'package:bloom/core/theme/app_colors.dart';
 import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/widgets/app_button.dart';
@@ -61,7 +62,7 @@ class WelcomeScreen3 extends StatelessWidget {
             child: SafeArea(
               child: AppButton(
                 label: 'Get Started',
-                onPressed: () => context.go('/onboardingScreen'),
+                onPressed: () => context.go(Routes.signUpScreen),
               ),
             ),
           ),

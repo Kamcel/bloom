@@ -1,5 +1,8 @@
 import 'package:bloom/core/router/routes.dart';
+import 'package:bloom/features/auth/presentation/screens/create_new_password_screen.dart';
+import 'package:bloom/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:bloom/features/auth/presentation/screens/login_screen.dart';
+import 'package:bloom/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:bloom/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:bloom/features/onboarding/data/models/onboarding_questions_page.dart';
 import 'package:bloom/features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -13,7 +16,7 @@ import 'package:go_router/go_router.dart';
 
 GoRouter createRouter({String? initialLocation}) {
   return GoRouter(
-    initialLocation: initialLocation ?? Routes.loginScreen,
+    initialLocation: initialLocation ?? Routes.splash,
     routes: [
       GoRoute(
         path: Routes.welcome,
@@ -69,6 +72,25 @@ GoRouter createRouter({String? initialLocation}) {
       GoRoute(
         path: Routes.loginScreen,
         builder: (context, state) => const LoginScreen(),
+      ),
+
+      GoRoute(
+        path: Routes.forgotPasswordScreen,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+
+      GoRoute(
+        path: Routes.resetPasswordScreen,
+        builder: (context, state) {
+          final extra = state.extra;
+          final email = extra is String ? extra : '';
+          return ResetPasswordEmailSentScreen(email: email);
+        },
+      ),
+
+      GoRoute(
+        path: Routes.createNewPasswordScreen,
+        builder: (context, state) => const CreateNewPasswordScreen(),
       ),
     ],
   );

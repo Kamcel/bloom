@@ -1,9 +1,11 @@
+import 'package:bloom/core/router/routes.dart';
 import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/theme/app_utils.dart';
 import 'package:bloom/core/widgets/app_button.dart';
 import 'package:bloom/features/auth/presentation/widgets/auth_textfield.dart';
 import 'package:bloom/features/auth/presentation/widgets/logo_and_tagline.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -55,13 +57,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
     setState(() {
       _isEmailValid =
           value.isNotEmpty &&
-          RegExp(r'^[\w.-]+@[\w.-]+.[\w.]+$`').hasMatch(value);
+          RegExp(r'^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$').hasMatch(value);
     });
   }
 
   String? _validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) return 'Email is required';
-    if (!RegExp(r'^[\w.-]+@[\w.-]+.[\w.]+`$').hasMatch(value.trim())) {
+    if (!RegExp(r'^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$').hasMatch(value.trim())) {
       return 'Enter a valid email';
     }
     return null;
@@ -183,6 +185,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  Future<void> _onLoginNavigationPressed() async {
+    context.go(Routes.loginScreen);
+  }
+
   OutlineInputBorder _border(Color color) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.feature),
@@ -205,7 +211,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
               horizontal: AppSpacing.standard,
             ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const LogoAndTagline(
@@ -254,6 +259,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         inputDecoration: InputDecoration(
                           labelText: 'Password',
                           hintText: 'Password',
+                          prefixIcon: PhosphorIcon(
+                            PhosphorIcons.lock,
+                            color: colors.primary,
+                          ),
                           filled: true,
                           fillColor: colors.surface,
                           suffixIcon: GestureDetector(
@@ -308,6 +317,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         inputDecoration: InputDecoration(
                           labelText: 'Confirm Password',
                           hintText: 'Confirm Password',
+                          prefixIcon: PhosphorIcon(
+                            PhosphorIcons.lock,
+                            color: colors.primary,
+                          ),
                           filled: true,
                           fillColor: colors.surface,
                           suffixIcon: GestureDetector(
@@ -366,6 +379,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   isEnabled: !anyLoading,
                   icon: PhosphorIcon(PhosphorIcons.googleLogo),
                   onPressed: _onGoogleSignInPressed,
+                ),
+
+                const SizedBox(height: AppSpacing.standard),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Already have an account? ',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    GestureDetector(
+                      onTap: anyLoading ? null : _onLoginNavigationPressed,
+                      child: Text(
+                        'Log In',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -1,9 +1,11 @@
+import 'package:bloom/core/router/routes.dart';
 import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/theme/app_utils.dart';
 import 'package:bloom/core/widgets/app_button.dart';
 import 'package:bloom/features/auth/presentation/widgets/auth_textfield.dart';
 import 'package:bloom/features/auth/presentation/widgets/logo_and_tagline.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -95,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_passwordController.text.isEmpty) {
       return focused ? colors.primary : colors.outlineVariant;
     }
-    return focused ? colors.primary : colors.outlineVariant;
+    return _isPasswordValid ? colors.primary : colors.outlineVariant;
   }
 
   OutlineInputBorder _border(Color color) {
@@ -133,11 +135,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _onForgotPasswordPressed() {
-    // TODO: Navigate to forgot password screen or show reset dialog
+    context.push(Routes.forgotPasswordScreen);
   }
 
   void _onSignUpNavigationPressed() {
-    // TODO: Navigate to SignUpScreen (e.g. via go_router)
+    context.go(Routes.signUpScreen);
   }
 
   @override
@@ -206,6 +208,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         inputDecoration: InputDecoration(
                           labelText: 'Password',
                           hintText: 'Password',
+                          prefixIcon: PhosphorIcon(
+                            PhosphorIcons.lock,
+                            color: colors.primary,
+                          ),
                           filled: true,
                           fillColor: colors.surface,
                           suffixIcon: GestureDetector(

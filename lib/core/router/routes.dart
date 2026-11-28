@@ -12,4 +12,7 @@ class Routes {
   //Auth screens
   static const String signUpScreen = '/signUpScreen';
   static const String loginScreen = '/loginScreen';
+  static const String forgotPasswordScreen = '/forgotPasswordScreen';
+  static const String resetPasswordScreen = '/resetPasswordScreen';
+  static const String createNewPasswordScreen = '/createNewPasswordScreen';
 }
