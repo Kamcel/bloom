@@ -1,26 +1,32 @@
+
 import 'package:bloom/core/router/routes.dart';
 import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/theme/app_utils.dart';
 import 'package:bloom/core/widgets/app_button.dart';
+import 'package:bloom/features/auth/data/models/auth_state.dart';
+import 'package:bloom/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:bloom/features/auth/presentation/widgets/auth_textfield.dart';
 import 'package:bloom/features/auth/presentation/widgets/logo_and_tagline.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-class ForgotPasswordScreen extends StatefulWidget {
+class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final TextEditingController _emailController = TextEditingController();
+class _ForgotPasswordScreenState
+    extends ConsumerState<ForgotPasswordScreen> {
+  final TextEditingController _emailController =
+      TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
-  bool _isSending = false;
   bool _isEmailValid = false;
 
   @override
@@ -29,12 +35,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  // Email
+  // EMAIL
+
   void _onEmailChanged(String value) {
     setState(() {
       _isEmailValid =
           value.trim().isNotEmpty &&
-          RegExp(r'^[\w.-]+@[\w.-]+.[A-Za-z]{2,}$`').hasMatch(value.trim());
+          RegExp(r'^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$')
+              .hasMatch(value.trim());
     });
   }
 
@@ -43,14 +51,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       return 'Email is required';
     }
 
-    if (!RegExp(r'^[\w.-]+@[\w.-]+.[A-Za-z]{2,}`$').hasMatch(value.trim())) {
+    if (!RegExp(r'^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$')
+        .hasMatch(value.trim())) {
       return 'Enter a valid email';
     }
 
     return null;
   }
 
-  Color _emailBorderColor(ColorScheme colors, {bool focused = false}) {
+  Color _emailBorderColor(
+    ColorScheme colors, {
+    bool focused = false,
+  }) {
     if (_emailController.text.isEmpty) {
       return focused ? colors.primary : colors.outlineVariant;
     }
@@ -65,32 +77,63 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
+  // PASSWORD RESET
+
   Future<void> _onSendPressed() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    setState(() => _isSending = true);
+    final email = _emailController.text.trim();
 
-    try {
-      // TODO: Connect password reset email logic.
+    await ref
+        .read(authControllerProvider.notifier)
+        .sendPasswordResetEmail(email: email);
+
+    if (!mounted) return;
+
+    final authState = ref.read(authControllerProvider);
+
+    final emailSent = authState.maybeWhen(
+      passwordResetEmailSent: (_) => true,
+      orElse: () => false,
+    );
+
+    if (emailSent) {
       context.push(
         Routes.resetPasswordScreen,
-        extra: _emailController.text.trim(),
+        extra: email,
       );
-    } finally {
-      if (mounted) {
-        setState(() => _isSending = false);
-      }
     }
   }
 
   void _onBackToLoginPressed() {
-    context.push(Routes.loginScreen);
+    context.go(Routes.loginScreen);
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+
+    ref.listen<AuthState>(authControllerProvider, (previous, next) {
+      next.maybeWhen(
+        authError: (message) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: colors.error,
+            ),
+          );
+        },
+        orElse: () {},
+      );
+    });
+
+    final authState = ref.watch(authControllerProvider);
+
+    final isLoading = authState.maybeWhen(
+      authLoading: () => true,
+      orElse: () => false,
+    );
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -143,16 +186,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     inputDecoration: InputDecoration(
                       labelText: 'E-mail',
                       hintText: 'Email',
-
                       prefixIcon: PhosphorIcon(
                         PhosphorIcons.envelope,
                         color: colors.primary,
                       ),
                       filled: true,
                       fillColor: colors.surface,
-                      enabledBorder: _border(_emailBorderColor(colors)),
+                      enabledBorder: _border(
+                        _emailBorderColor(colors),
+                      ),
                       focusedBorder: _border(
-                        _emailBorderColor(colors, focused: true),
+                        _emailBorderColor(
+                          colors,
+                          focused: true,
+                        ),
                       ),
                       errorBorder: _border(colors.error),
                       focusedErrorBorder: _border(colors.error),
@@ -164,8 +211,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                 AppButton(
                   label: 'Send Reset Link',
-                  isLoading: _isSending,
-                  isEnabled: !_isSending,
+                  isLoading: isLoading,
+                  isEnabled: !isLoading,
                   onPressed: _onSendPressed,
                 ),
 
@@ -173,7 +220,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                 Center(
                   child: TextButton(
-                    onPressed: _isSending ? null : _onBackToLoginPressed,
+                    onPressed:
+                        isLoading ? null : _onBackToLoginPressed,
                     child: Text(
                       'Back to Log In',
                       style: textTheme.bodyMedium?.copyWith(
