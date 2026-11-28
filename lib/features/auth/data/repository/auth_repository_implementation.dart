@@ -1,3 +1,4 @@
+import 'package:bloom/features/auth/data/models/auth_event.dart';
 import 'package:bloom/features/auth/data/models/user_auth.dart';
 import 'package:bloom/features/auth/data/repository/auth_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
@@ -7,7 +8,6 @@ class AuthRepositoryImplementation implements AuthRepository {
 
   AuthRepositoryImplementation(this._client);
 
-  //Map Supabase users to Bloom UserAuth
   UserAuth _mapUser(supabase.User user) {
     final metadata = user.userMetadata ?? {};
 
@@ -53,6 +53,7 @@ class AuthRepositoryImplementation implements AuthRepository {
     if (user == null) {
       throw StateError('Account creation returned no user');
     }
+
     return _mapUser(user);
   }
 
@@ -65,11 +66,13 @@ class AuthRepositoryImplementation implements AuthRepository {
       email: email,
       password: password,
     );
+
     final user = response.user;
 
     if (user == null) {
       throw StateError('Login returned no user');
     }
+
     return _mapUser(user);
   }
 
@@ -100,6 +103,21 @@ class AuthRepositoryImplementation implements AuthRepository {
   }
 
   @override
+  Future<UserAuth> updatePassword({required String newPassword}) async {
+    final response = await _client.auth.updateUser(
+      supabase.UserAttributes(password: newPassword),
+    );
+
+    final user = response.user;
+
+    if (user == null) {
+      throw StateError('Password update returned no user');
+    }
+
+    return _mapUser(user);
+  }
+
+  @override
   Future<UserAuth?> getCurrentUser() async {
     final user = _client.auth.currentUser;
 
@@ -107,18 +125,14 @@ class AuthRepositoryImplementation implements AuthRepository {
   }
 
   @override
-  Stream<UserAuth?> get authStateChanges {
+  Stream<AuthEvent> get authStateChanges {
     return _client.auth.onAuthStateChange.map((authState) {
-      final user = authState.session?.user;
+      final supabaseUser = authState.session?.user;
 
-      return user == null ? null : _mapUser(user);
+      return AuthEvent(
+        event: authState.event,
+        user: supabaseUser == null ? null : _mapUser(supabaseUser),
+      );
     });
-  }
-
-  @override
-  Future<void> updatePassword({required String newPassword}) async {
-    await _client.auth.updateUser(
-      supabase.UserAttributes(password: newPassword),
-    );
   }
 }

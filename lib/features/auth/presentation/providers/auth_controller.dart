@@ -2,6 +2,7 @@ import 'package:bloom/features/auth/data/models/auth_state.dart';
 import 'package:bloom/features/auth/data/repository/auth_repository.dart';
 import 'package:bloom/features/auth/presentation/providers/auth_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
 part 'auth_controller.g.dart';
 
@@ -13,7 +14,20 @@ class AuthController extends _$AuthController {
   AuthState build() {
     ref.listen(authStateChangesProvider, (previous, next) {
       next.when(
-        data: (user) {
+        data: (authEvent) {
+          final user = authEvent.user;
+
+          if (authEvent.event == supabase.AuthChangeEvent.passwordRecovery) {
+            if (user != null) {
+              state = AuthState.passwordRecovery(user: user);
+            } else {
+              state = const AuthState.authError(
+                'Password recovery session is unavailable.',
+              );
+            }
+            return;
+          }
+
           if (user == null) {
             state = const AuthState.unauthenticated();
           } else if (user.emailVerifiedAt == null) {
@@ -106,6 +120,18 @@ class AuthController extends _$AuthController {
       state = const AuthState.emailVerificationPending(
         message: 'A new confirmation email has been sent',
       );
+    } catch (e) {
+      state = AuthState.authError(e.toString());
+    }
+  }
+
+  Future<void> updatePassword({required String newPassword}) async {
+    state = const AuthState.authLoading();
+
+    try {
+      final user = await _repo.updatePassword(newPassword: newPassword);
+
+      state = AuthState.authenticated(user: user);
     } catch (e) {
       state = AuthState.authError(e.toString());
     }

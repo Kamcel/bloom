@@ -1,4 +1,6 @@
 import 'package:bloom/core/router/routes.dart';
+import 'package:bloom/features/auth/presentation/screens/login_screen.dart';
+import 'package:bloom/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:bloom/features/onboarding/data/models/onboarding_questions_page.dart';
 import 'package:bloom/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:bloom/features/onboarding/presentation/screens/splash_screen.dart';
@@ -11,7 +13,7 @@ import 'package:go_router/go_router.dart';
 
 GoRouter createRouter({String? initialLocation}) {
   return GoRouter(
-    initialLocation: initialLocation ?? Routes.onboardingScreen,
+    initialLocation: initialLocation ?? Routes.loginScreen,
     routes: [
       GoRoute(
         path: Routes.welcome,
@@ -57,6 +59,16 @@ GoRouter createRouter({String? initialLocation}) {
             ),
           ],
         ),
+      ),
+
+      GoRoute(
+        path: Routes.signUpScreen,
+        builder: (context, state) => const SignUpScreen(),
+      ),
+
+      GoRoute(
+        path: Routes.loginScreen,
+        builder: (context, state) => const LoginScreen(),
       ),
     ],
   );

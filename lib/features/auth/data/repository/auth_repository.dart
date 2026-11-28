@@ -1,3 +1,4 @@
+import 'package:bloom/features/auth/data/models/auth_event.dart';
 import 'package:bloom/features/auth/data/models/user_auth.dart';
 
 abstract class AuthRepository {
@@ -15,11 +16,11 @@ abstract class AuthRepository {
 
   Future<void> sendEmailConfirmation({required String email});
 
-  Future<void> updatePassword({required String newPassword});
-
   Future<void> signInWithGoogle();
+
+  Future<UserAuth> updatePassword({required String newPassword});
 
   Future<UserAuth?> getCurrentUser();
 
-  Stream<UserAuth?> get authStateChanges;
+  Stream<AuthEvent> get authStateChanges;
 }

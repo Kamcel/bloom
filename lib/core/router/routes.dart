@@ -8,4 +8,8 @@ class Routes {
   static const String welcome2 = '/welcome2';
   static const String welcome3 = '/welcome3';
   static const String onboardingScreen = '/onboardingScreen';
+
+  //Auth screens
+  static const String signUpScreen = '/signUpScreen';
+  static const String loginScreen = '/loginScreen';
 }
