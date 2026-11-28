@@ -1,28 +1,33 @@
+
+import 'package:bloom/core/router/routes.dart';
 import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/theme/app_utils.dart';
 import 'package:bloom/core/widgets/app_button.dart';
+import 'package:bloom/features/auth/data/models/auth_state.dart';
+import 'package:bloom/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:bloom/features/auth/presentation/widgets/auth_textfield.dart';
 import 'package:bloom/features/auth/presentation/widgets/logo_and_tagline.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-class CreateNewPasswordScreen extends StatefulWidget {
+class CreateNewPasswordScreen extends ConsumerStatefulWidget {
   const CreateNewPasswordScreen({super.key});
 
   @override
-  State<CreateNewPasswordScreen> createState() =>
+  ConsumerState<CreateNewPasswordScreen> createState() =>
       _CreateNewPasswordScreenState();
 }
 
-class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
+class _CreateNewPasswordScreenState
+    extends ConsumerState<CreateNewPasswordScreen> {
   final TextEditingController _passwordController = TextEditingController();
-
   final TextEditingController _confirmPasswordController =
       TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
-  bool _isUpdating = false;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
@@ -43,14 +48,13 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
     super.dispose();
   }
 
-  // Password
   void _onPasswordChanged(String value) {
     setState(() {
       _hasMinLength = value.length >= 8;
       _hasUpperCase = RegExp(r'[A-Z]').hasMatch(value);
       _hasLowerCase = RegExp(r'[a-z]').hasMatch(value);
       _hasNumber = RegExp(r'[0-9]').hasMatch(value);
-      _hasSpecialChar = RegExp(r'[!@#$`%^&*()?]').hasMatch(value);
+      _hasSpecialChar = RegExp(r'[!@#$%^&*()?]').hasMatch(value);
 
       _isPasswordValid =
           _hasMinLength &&
@@ -88,14 +92,13 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
       return 'Must contain a number';
     }
 
-    if (!RegExp(r'[!@#`$%^&*()?]').hasMatch(value)) {
+    if (!RegExp(r'[!@#$%^&*()?]').hasMatch(value)) {
       return 'Must contain a special character';
     }
 
     return null;
   }
 
-  // Confirm password
   void _onConfirmPasswordChanged(String value) {
     setState(() {
       _isConfirmPasswordValid =
@@ -115,7 +118,6 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
     return null;
   }
 
-  // Border helpers
   Color _passwordBorderColor(ColorScheme colors, {bool focused = false}) {
     if (_passwordController.text.isEmpty) {
       return focused ? colors.primary : colors.outlineVariant;
@@ -142,19 +144,26 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
     );
   }
 
-  // Action
   Future<void> _onUpdatePasswordPressed() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    setState(() => _isUpdating = true);
+    await ref
+        .read(authControllerProvider.notifier)
+        .updatePassword(newPassword: _passwordController.text);
 
-    try {
-      // TODO: Connect AuthController.updatePassword().
-      // TODO: Navigate to LoginScreen after successful update.
-    } finally {
-      if (mounted) {
-        setState(() => _isUpdating = false);
-      }
+    if (!mounted) return;
+
+    final isAuthenticated = ref.read(authControllerProvider).maybeWhen(
+      authenticated: (_) => true,
+      orElse: () => false,
+    );
+
+    if (isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Your password has been updated.')),
+      );
+
+      context.go(Routes.loginScreen);
     }
   }
 
@@ -162,6 +171,22 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+
+    ref.listen<AuthState>(authControllerProvider, (previous, next) {
+      next.maybeWhen(
+        authError: (message) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+        },
+        orElse: () {},
+      );
+    });
+
+    final isUpdating = ref.watch(authControllerProvider).maybeWhen(
+      authLoading: () => true,
+      orElse: () => false,
+    );
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -179,18 +204,14 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                   logoUrl: 'assets/images/bloom_logo.svg',
                   tagline: 'A little more supported, every step of the way',
                 ),
-
                 const SizedBox(height: AppSpacing.breathing),
-
                 Text(
                   'Create a new password',
                   style: textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 Gap.vMin,
-
                 Text(
                   'Choose a new password for your account. '
                   'Make sure it is secure and easy for you to remember.',
@@ -198,14 +219,11 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                     color: colors.onSurfaceVariant,
                   ),
                 ),
-
                 Gap.vBreathing,
-
                 Form(
                   key: _formKey,
                   child: Column(
                     children: [
-                      // New password
                       AuthTextfield(
                         controller: _passwordController,
                         validator: _validatePassword,
@@ -239,37 +257,30 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                           focusedErrorBorder: _border(colors.error),
                         ),
                       ),
-
-                      // Password rules
                       if (_showPasswordRules) ...[
                         const SizedBox(height: AppSpacing.standard),
-
                         _buildPasswordRule(
                           'At least 8 characters',
                           _hasMinLength,
                         ),
-
                         _buildPasswordRule(
                           'At least one uppercase letter',
                           _hasUpperCase,
                         ),
-
                         _buildPasswordRule(
                           'At least one lowercase letter',
                           _hasLowerCase,
                         ),
-
-                        _buildPasswordRule('At least one number', _hasNumber),
-
+                        _buildPasswordRule(
+                          'At least one number',
+                          _hasNumber,
+                        ),
                         _buildPasswordRule(
                           'At least one special character (!@#^&*?)',
                           _hasSpecialChar,
                         ),
                       ],
-
                       Gap.vMin,
-
-                      // Confirm password
                       AuthTextfield(
                         controller: _confirmPasswordController,
                         validator: _validateConfirmPassword,
@@ -300,7 +311,10 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                             _confirmPasswordBorderColor(colors),
                           ),
                           focusedBorder: _border(
-                            _confirmPasswordBorderColor(colors, focused: true),
+                            _confirmPasswordBorderColor(
+                              colors,
+                              focused: true,
+                            ),
                           ),
                           errorBorder: _border(colors.error),
                           focusedErrorBorder: _border(colors.error),
@@ -309,13 +323,11 @@ class _CreateNewPasswordScreenState extends State<CreateNewPasswordScreen> {
                     ],
                   ),
                 ),
-
                 Gap.vBreathing,
-
                 AppButton(
                   label: 'Update Password',
-                  isLoading: _isUpdating,
-                  isEnabled: !_isUpdating,
+                  isLoading: isUpdating,
+                  isEnabled: !isUpdating,
                   onPressed: _onUpdatePasswordPressed,
                 ),
               ],
