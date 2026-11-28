@@ -11,13 +11,10 @@ class AuthRepositoryImplementation implements AuthRepository {
   UserAuth _mapUser(supabase.User user) {
     final metadata = user.userMetadata ?? {};
 
-    final name =
+    final rawName =
         metadata['name'] ?? metadata['full_name'] ?? metadata['display-name'];
 
-    if (name is! String || name.trim().isEmpty) {
-      throw StateError('User name is missing from Supabase metadata');
-    }
-
+    final name = rawName is String ? rawName.trim() : '';
     final email = user.email;
 
     if (email == null || email.isEmpty) {

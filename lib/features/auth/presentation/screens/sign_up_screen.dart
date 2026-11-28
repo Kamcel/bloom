@@ -2,20 +2,24 @@ import 'package:bloom/core/router/routes.dart';
 import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/theme/app_utils.dart';
 import 'package:bloom/core/widgets/app_button.dart';
+import 'package:bloom/features/auth/data/models/auth_state.dart';
+import 'package:bloom/features/auth/presentation/providers/auth_controller.dart';
 import 'package:bloom/features/auth/presentation/widgets/auth_textfield.dart';
 import 'package:bloom/features/auth/presentation/widgets/logo_and_tagline.dart';
+import 'package:bloom/features/onboarding/presentation/providers/onboarding_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-class SignUpScreen extends StatefulWidget {
+class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  ConsumerState<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
@@ -23,8 +27,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
 
   bool _isChecked = false;
-  bool _isSigningUp = false;
-  bool _isGoogleLoading = false;
 
   // Validation booleans
   bool _isEmailValid = false;
@@ -152,37 +154,39 @@ class _SignUpScreenState extends State<SignUpScreen> {
   // ── Actions ───────────────────────────────────────────────────────────────
 
   Future<void> _onSignUpPressed() async {
-    final isValid = _formKey.currentState?.validate() ?? false;
-    if (!isValid) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     if (!_isChecked) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please agree to the terms & conditions to continue.'),
+          content: Text('Please agree to the terms & conditions to continue'),
         ),
       );
       return;
     }
+    //Retrieve name collected from onboarding
+    final onboarding = ref.read(onboardingControllerProvider);
+    final name = onboarding.asData?.value.data.name?.trim();
 
-    setState(() => _isSigningUp = true);
-    try {
-      // TODO: Connect sign-up logic / auth controller here
-    } finally {
-      if (mounted) {
-        setState(() => _isSigningUp = false);
-      }
+    if (name == null || name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Your name is missing. Please complete onboarding'),
+        ),
+      );
+      return;
     }
+    await ref
+        .read(authControllerProvider.notifier)
+        .signUp(
+          name: name,
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
   }
 
   Future<void> _onGoogleSignInPressed() async {
-    setState(() => _isGoogleLoading = true);
-    try {
-      // TODO: Connect Google sign-in logic / auth controller here
-    } finally {
-      if (mounted) {
-        setState(() => _isGoogleLoading = false);
-      }
-    }
+    await ref.read(authControllerProvider.notifier).signInWithGoogle();
   }
 
   Future<void> _onLoginNavigationPressed() async {
@@ -199,7 +203,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final anyLoading = _isSigningUp || _isGoogleLoading;
+    ref.listen(authControllerProvider, (previous, next) {
+      next.maybeWhen(
+        emailVerificationPending: (message) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message), backgroundColor: colors.error),
+          );
+        },
+        orElse: () {},
+      );
+    });
+    {}
+
+    final authState = ref.watch(authControllerProvider);
+
+    final isLoading = authState.maybeWhen(
+      authLoading: () => true,
+      orElse: () => false,
+    );
+
+    final anyLoading = isLoading;
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -365,7 +388,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 // Sign Up button
                 AppButton(
                   label: 'Sign Up',
-                  isLoading: _isSigningUp,
+                  isLoading: isLoading,
                   isEnabled: !anyLoading,
                   onPressed: _onSignUpPressed,
                 ),
@@ -375,7 +398,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 // Continue with Google button
                 AppButton(
                   label: 'Continue with Google',
-                  isLoading: _isGoogleLoading,
+                  isLoading: isLoading,
                   isEnabled: !anyLoading,
                   icon: PhosphorIcon(PhosphorIcons.googleLogo),
                   onPressed: _onGoogleSignInPressed,

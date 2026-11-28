@@ -1,10 +1,9 @@
-
 import 'package:bloom/core/router/routes.dart';
 import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/theme/app_utils.dart';
 import 'package:bloom/core/widgets/app_button.dart';
 import 'package:bloom/features/auth/data/models/auth_state.dart';
-import 'package:bloom/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:bloom/features/auth/presentation/providers/auth_controller.dart';
 import 'package:bloom/features/auth/presentation/widgets/logo_and_tagline.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,10 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 class ResetPasswordEmailSentScreen extends ConsumerWidget {
-  const ResetPasswordEmailSentScreen({
-    super.key,
-    required this.email,
-  });
+  const ResetPasswordEmailSentScreen({super.key, required this.email});
 
   final String email;
 
@@ -28,9 +24,8 @@ class ResetPasswordEmailSentScreen extends ConsumerWidget {
     ref.listen<AuthState>(authControllerProvider, (previous, next) {
       next.maybeWhen(
         authError: (message) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(message)));
         },
         passwordResetEmailSent: (_) {
           ScaffoldMessenger.of(context).showSnackBar(

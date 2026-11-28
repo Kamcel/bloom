@@ -1,10 +1,9 @@
-
 import 'package:bloom/core/router/routes.dart';
 import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/theme/app_utils.dart';
 import 'package:bloom/core/widgets/app_button.dart';
 import 'package:bloom/features/auth/data/models/auth_state.dart';
-import 'package:bloom/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:bloom/features/auth/presentation/providers/auth_controller.dart';
 import 'package:bloom/features/auth/presentation/widgets/auth_textfield.dart';
 import 'package:bloom/features/auth/presentation/widgets/logo_and_tagline.dart';
 import 'package:flutter/material.dart';
@@ -153,10 +152,9 @@ class _CreateNewPasswordScreenState
 
     if (!mounted) return;
 
-    final isAuthenticated = ref.read(authControllerProvider).maybeWhen(
-      authenticated: (_) => true,
-      orElse: () => false,
-    );
+    final isAuthenticated = ref
+        .read(authControllerProvider)
+        .maybeWhen(authenticated: (_) => true, orElse: () => false);
 
     if (isAuthenticated) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -175,18 +173,16 @@ class _CreateNewPasswordScreenState
     ref.listen<AuthState>(authControllerProvider, (previous, next) {
       next.maybeWhen(
         authError: (message) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(message)));
         },
         orElse: () {},
       );
     });
 
-    final isUpdating = ref.watch(authControllerProvider).maybeWhen(
-      authLoading: () => true,
-      orElse: () => false,
-    );
+    final isUpdating = ref
+        .watch(authControllerProvider)
+        .maybeWhen(authLoading: () => true, orElse: () => false);
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -271,10 +267,7 @@ class _CreateNewPasswordScreenState
                           'At least one lowercase letter',
                           _hasLowerCase,
                         ),
-                        _buildPasswordRule(
-                          'At least one number',
-                          _hasNumber,
-                        ),
+                        _buildPasswordRule('At least one number', _hasNumber),
                         _buildPasswordRule(
                           'At least one special character (!@#^&*?)',
                           _hasSpecialChar,
@@ -311,10 +304,7 @@ class _CreateNewPasswordScreenState
                             _confirmPasswordBorderColor(colors),
                           ),
                           focusedBorder: _border(
-                            _confirmPasswordBorderColor(
-                              colors,
-                              focused: true,
-                            ),
+                            _confirmPasswordBorderColor(colors, focused: true),
                           ),
                           errorBorder: _border(colors.error),
                           focusedErrorBorder: _border(colors.error),

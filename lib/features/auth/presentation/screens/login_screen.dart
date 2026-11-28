@@ -1,10 +1,10 @@
-
 import 'package:bloom/core/router/routes.dart';
 import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/theme/app_utils.dart';
 import 'package:bloom/core/widgets/app_button.dart';
 import 'package:bloom/features/auth/data/models/auth_state.dart';
-import 'package:bloom/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:bloom/features/auth/presentation/providers/auth_controller.dart';
+
 import 'package:bloom/features/auth/presentation/widgets/auth_textfield.dart';
 import 'package:bloom/features/auth/presentation/widgets/logo_and_tagline.dart';
 import 'package:flutter/material.dart';
@@ -41,8 +41,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() {
       _isEmailValid =
           value.trim().isNotEmpty &&
-          RegExp(r'^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$')
-              .hasMatch(value.trim());
+          RegExp(r'^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$').hasMatch(value.trim());
     });
   }
 
@@ -51,8 +50,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return 'Email is required';
     }
 
-    if (!RegExp(r'^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$')
-        .hasMatch(value.trim())) {
+    if (!RegExp(r'^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$').hasMatch(value.trim())) {
       return 'Enter a valid email';
     }
 
@@ -71,10 +69,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   // BORDER HELPERS
 
-  Color _emailBorderColor(
-    ColorScheme colors, {
-    bool focused = false,
-  }) {
+  Color _emailBorderColor(ColorScheme colors, {bool focused = false}) {
     if (_emailController.text.isEmpty) {
       return focused ? colors.primary : colors.outlineVariant;
     }
@@ -82,10 +77,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return _isEmailValid ? Colors.green : colors.error;
   }
 
-  Color _passwordBorderColor(
-    ColorScheme colors, {
-    bool focused = false,
-  }) {
+  Color _passwordBorderColor(ColorScheme colors, {bool focused = false}) {
     if (_passwordController.text.isEmpty) {
       return focused ? colors.primary : colors.outlineVariant;
     }
@@ -105,16 +97,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _onLoginPressed() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    await ref.read(authControllerProvider.notifier).signIn(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
+    await ref
+        .read(authControllerProvider.notifier)
+        .signIn(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
   }
 
   Future<void> _onGoogleLoginPressed() async {
-    await ref
-        .read(authControllerProvider.notifier)
-        .signInWithGoogle();
+    await ref.read(authControllerProvider.notifier).signInWithGoogle();
   }
 
   // NAVIGATION
@@ -136,16 +128,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ref.listen<AuthState>(authControllerProvider, (previous, next) {
       next.maybeWhen(
         emailVerificationPending: (message) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(message)));
         },
         authError: (message) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-              backgroundColor: colors.error,
-            ),
+            SnackBar(content: Text(message), backgroundColor: colors.error),
           );
         },
         orElse: () {},
@@ -202,14 +190,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           filled: true,
                           fillColor: colors.surface,
-                          enabledBorder: _border(
-                            _emailBorderColor(colors),
-                          ),
+                          enabledBorder: _border(_emailBorderColor(colors)),
                           focusedBorder: _border(
-                            _emailBorderColor(
-                              colors,
-                              focused: true,
-                            ),
+                            _emailBorderColor(colors, focused: true),
                           ),
                           errorBorder: _border(colors.error),
                           focusedErrorBorder: _border(colors.error),
@@ -236,8 +219,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           suffixIcon: GestureDetector(
                             onTap: () {
                               setState(() {
-                                _isPasswordVisible =
-                                    !_isPasswordVisible;
+                                _isPasswordVisible = !_isPasswordVisible;
                               });
                             },
                             child: PhosphorIcon(
@@ -246,14 +228,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   : PhosphorIcons.eye,
                             ),
                           ),
-                          enabledBorder: _border(
-                            _passwordBorderColor(colors),
-                          ),
+                          enabledBorder: _border(_passwordBorderColor(colors)),
                           focusedBorder: _border(
-                            _passwordBorderColor(
-                              colors,
-                              focused: true,
-                            ),
+                            _passwordBorderColor(colors, focused: true),
                           ),
                           errorBorder: _border(colors.error),
                           focusedErrorBorder: _border(colors.error),
@@ -267,8 +244,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed:
-                        isLoading ? null : _onForgotPasswordPressed,
+                    onPressed: isLoading ? null : _onForgotPasswordPressed,
                     child: Text(
                       'Forgot password?',
                       style: textTheme.bodyMedium?.copyWith(
@@ -296,9 +272,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   label: 'Continue with Google',
                   isLoading: isLoading,
                   isEnabled: !isLoading,
-                  icon: PhosphorIcon(
-                    PhosphorIcons.googleLogo,
-                  ),
+                  icon: PhosphorIcon(PhosphorIcons.googleLogo),
                   onPressed: _onGoogleLoginPressed,
                 ),
 
@@ -313,9 +287,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       style: textTheme.bodyMedium,
                     ),
                     GestureDetector(
-                      onTap: isLoading
-                          ? null
-                          : _onSignUpNavigationPressed,
+                      onTap: isLoading ? null : _onSignUpNavigationPressed,
                       child: Text(
                         'Sign Up',
                         style: textTheme.bodyMedium?.copyWith(

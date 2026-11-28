@@ -1,10 +1,9 @@
-
 import 'package:bloom/core/router/routes.dart';
 import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/theme/app_utils.dart';
 import 'package:bloom/core/widgets/app_button.dart';
 import 'package:bloom/features/auth/data/models/auth_state.dart';
-import 'package:bloom/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:bloom/features/auth/presentation/providers/auth_controller.dart';
 import 'package:bloom/features/auth/presentation/widgets/auth_textfield.dart';
 import 'package:bloom/features/auth/presentation/widgets/logo_and_tagline.dart';
 import 'package:flutter/material.dart';
@@ -20,10 +19,8 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
       _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState
-    extends ConsumerState<ForgotPasswordScreen> {
-  final TextEditingController _emailController =
-      TextEditingController();
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
+  final TextEditingController _emailController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -41,8 +38,7 @@ class _ForgotPasswordScreenState
     setState(() {
       _isEmailValid =
           value.trim().isNotEmpty &&
-          RegExp(r'^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$')
-              .hasMatch(value.trim());
+          RegExp(r'^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$').hasMatch(value.trim());
     });
   }
 
@@ -51,18 +47,14 @@ class _ForgotPasswordScreenState
       return 'Email is required';
     }
 
-    if (!RegExp(r'^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$')
-        .hasMatch(value.trim())) {
+    if (!RegExp(r'^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$').hasMatch(value.trim())) {
       return 'Enter a valid email';
     }
 
     return null;
   }
 
-  Color _emailBorderColor(
-    ColorScheme colors, {
-    bool focused = false,
-  }) {
+  Color _emailBorderColor(ColorScheme colors, {bool focused = false}) {
     if (_emailController.text.isEmpty) {
       return focused ? colors.primary : colors.outlineVariant;
     }
@@ -98,10 +90,7 @@ class _ForgotPasswordScreenState
     );
 
     if (emailSent) {
-      context.push(
-        Routes.resetPasswordScreen,
-        extra: email,
-      );
+      context.push(Routes.resetPasswordScreen, extra: email);
     }
   }
 
@@ -118,10 +107,7 @@ class _ForgotPasswordScreenState
       next.maybeWhen(
         authError: (message) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-              backgroundColor: colors.error,
-            ),
+            SnackBar(content: Text(message), backgroundColor: colors.error),
           );
         },
         orElse: () {},
@@ -192,14 +178,9 @@ class _ForgotPasswordScreenState
                       ),
                       filled: true,
                       fillColor: colors.surface,
-                      enabledBorder: _border(
-                        _emailBorderColor(colors),
-                      ),
+                      enabledBorder: _border(_emailBorderColor(colors)),
                       focusedBorder: _border(
-                        _emailBorderColor(
-                          colors,
-                          focused: true,
-                        ),
+                        _emailBorderColor(colors, focused: true),
                       ),
                       errorBorder: _border(colors.error),
                       focusedErrorBorder: _border(colors.error),
@@ -220,8 +201,7 @@ class _ForgotPasswordScreenState
 
                 Center(
                   child: TextButton(
-                    onPressed:
-                        isLoading ? null : _onBackToLoginPressed,
+                    onPressed: isLoading ? null : _onBackToLoginPressed,
                     child: Text(
                       'Back to Log In',
                       style: textTheme.bodyMedium?.copyWith(
