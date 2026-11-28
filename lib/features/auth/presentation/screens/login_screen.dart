@@ -1,40 +1,32 @@
+
 import 'package:bloom/core/router/routes.dart';
 import 'package:bloom/core/theme/app_dimension.dart';
 import 'package:bloom/core/theme/app_utils.dart';
 import 'package:bloom/core/widgets/app_button.dart';
+import 'package:bloom/features/auth/data/models/auth_state.dart';
+import 'package:bloom/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:bloom/features/auth/presentation/widgets/auth_textfield.dart';
 import 'package:bloom/features/auth/presentation/widgets/logo_and_tagline.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
   final _formKey = GlobalKey<FormState>();
 
-  bool _isLoggingIn = false;
-  bool _isGoogleLoading = false;
   bool _isEmailValid = false;
   bool _isPasswordVisible = false;
-
-  // Validation booleans
-
-  bool _isPasswordValid = false;
-
-  // ── Password rule trackers ────────────────────────────────────────────────
-  bool _hasMinLength = false;
-  bool _hasUpperCase = false;
-  bool _hasLowerCase = false;
-  bool _hasNumber = false;
-  bool _hasSpecialChar = false;
 
   @override
   void dispose() {
@@ -43,61 +35,62 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // ── Email ─────────────────────────────────────────────────────────────────
+  // EMAIL
 
   void _onEmailChanged(String value) {
     setState(() {
       _isEmailValid =
           value.trim().isNotEmpty &&
-          RegExp(r'^[\w.-]+@[\w.-]+.[\w.]+$`').hasMatch(value.trim());
+          RegExp(r'^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$')
+              .hasMatch(value.trim());
     });
   }
 
   String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Email is required';
-    if (!RegExp(r'^[\w.-]+@[\w.-]+.[\w.]+`$').hasMatch(value.trim())) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Email is required';
+    }
+
+    if (!RegExp(r'^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$')
+        .hasMatch(value.trim())) {
       return 'Enter a valid email';
     }
+
     return null;
   }
 
-  // ── Password ──────────────────────────────────────────────────────────────
-
-  void _onPasswordChanged(String value) {
-    setState(() {
-      _hasMinLength = value.length >= 8;
-      _hasUpperCase = RegExp(r'[A-Z]').hasMatch(value);
-      _hasLowerCase = RegExp(r'[a-z]').hasMatch(value);
-      _hasNumber = RegExp(r'[0-9]').hasMatch(value);
-      _hasSpecialChar = RegExp(r'[!@#$`%^&*()?]').hasMatch(value);
-      _isPasswordValid =
-          _hasMinLength &&
-          _hasUpperCase &&
-          _hasLowerCase &&
-          _hasNumber &&
-          _hasSpecialChar;
-    });
-  }
+  // PASSWORD
 
   String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Password is required';
+    if (value == null || value.isEmpty) {
+      return 'Password is required';
+    }
+
     return null;
   }
 
-  // ── Border colour helpers ─────────────────────────────────────────────────
+  // BORDER HELPERS
 
-  Color _emailBorderColor(ColorScheme colors, {bool focused = false}) {
+  Color _emailBorderColor(
+    ColorScheme colors, {
+    bool focused = false,
+  }) {
     if (_emailController.text.isEmpty) {
       return focused ? colors.primary : colors.outlineVariant;
     }
+
     return _isEmailValid ? Colors.green : colors.error;
   }
 
-  Color _passwordBorderColor(ColorScheme colors, {bool focused = false}) {
+  Color _passwordBorderColor(
+    ColorScheme colors, {
+    bool focused = false,
+  }) {
     if (_passwordController.text.isEmpty) {
       return focused ? colors.primary : colors.outlineVariant;
     }
-    return _isPasswordValid ? colors.primary : colors.outlineVariant;
+
+    return colors.primary;
   }
 
   OutlineInputBorder _border(Color color) {
@@ -107,32 +100,24 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ── Actions ───────────────────────────────────────────────────────────────
+  // AUTHENTICATION
 
   Future<void> _onLoginPressed() async {
-    final isValid = _formKey.currentState?.validate() ?? false;
-    if (!isValid) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    setState(() => _isLoggingIn = true);
-    try {
-      // TODO: Connect email/password login logic here
-    } finally {
-      if (mounted) {
-        setState(() => _isLoggingIn = false);
-      }
-    }
+    await ref.read(authControllerProvider.notifier).signIn(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
   }
 
   Future<void> _onGoogleLoginPressed() async {
-    setState(() => _isGoogleLoading = true);
-    try {
-      // TODO: Connect Google sign-in logic here
-    } finally {
-      if (mounted) {
-        setState(() => _isGoogleLoading = false);
-      }
-    }
+    await ref
+        .read(authControllerProvider.notifier)
+        .signInWithGoogle();
   }
+
+  // NAVIGATION
 
   void _onForgotPasswordPressed() {
     context.push(Routes.forgotPasswordScreen);
@@ -146,7 +131,34 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final anyLoading = _isLoggingIn || _isGoogleLoading;
+
+    // Listen for authentication feedback.
+    ref.listen<AuthState>(authControllerProvider, (previous, next) {
+      next.maybeWhen(
+        emailVerificationPending: (message) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+        },
+        authError: (message) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: colors.error,
+            ),
+          );
+        },
+        orElse: () {},
+      );
+    });
+
+    // Read the current authentication state.
+    final authState = ref.watch(authControllerProvider);
+
+    final isLoading = authState.maybeWhen(
+      authLoading: () => true,
+      orElse: () => false,
+    );
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -166,12 +178,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   tagline:
                       'Welcome back, let us take it one gentle step at a time',
                 ),
+
                 const SizedBox(height: AppSpacing.breathing),
+
                 Form(
                   key: _formKey,
                   child: Column(
                     children: [
-                      // Email
+                      // EMAIL
                       AuthTextfield(
                         controller: _emailController,
                         validator: _validateEmail,
@@ -188,21 +202,26 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           filled: true,
                           fillColor: colors.surface,
-                          enabledBorder: _border(_emailBorderColor(colors)),
+                          enabledBorder: _border(
+                            _emailBorderColor(colors),
+                          ),
                           focusedBorder: _border(
-                            _emailBorderColor(colors, focused: true),
+                            _emailBorderColor(
+                              colors,
+                              focused: true,
+                            ),
                           ),
                           errorBorder: _border(colors.error),
                           focusedErrorBorder: _border(colors.error),
                         ),
                       ),
+
                       Gap.vMin,
 
-                      // Password
+                      // PASSWORD
                       AuthTextfield(
                         controller: _passwordController,
                         validator: _validatePassword,
-                        onChanged: _onPasswordChanged,
                         obscureText: !_isPasswordVisible,
                         textInputAction: TextInputAction.done,
                         inputDecoration: InputDecoration(
@@ -215,18 +234,26 @@ class _LoginScreenState extends State<LoginScreen> {
                           filled: true,
                           fillColor: colors.surface,
                           suffixIcon: GestureDetector(
-                            onTap: () => setState(() {
-                              _isPasswordVisible = !_isPasswordVisible;
-                            }),
+                            onTap: () {
+                              setState(() {
+                                _isPasswordVisible =
+                                    !_isPasswordVisible;
+                              });
+                            },
                             child: PhosphorIcon(
                               _isPasswordVisible
                                   ? PhosphorIcons.eyeSlash
                                   : PhosphorIcons.eye,
                             ),
                           ),
-                          enabledBorder: _border(_passwordBorderColor(colors)),
+                          enabledBorder: _border(
+                            _passwordBorderColor(colors),
+                          ),
                           focusedBorder: _border(
-                            _passwordBorderColor(colors, focused: true),
+                            _passwordBorderColor(
+                              colors,
+                              focused: true,
+                            ),
                           ),
                           errorBorder: _border(colors.error),
                           focusedErrorBorder: _border(colors.error),
@@ -236,11 +263,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                // Forgot password link
+                // FORGOT PASSWORD
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: anyLoading ? null : _onForgotPasswordPressed,
+                    onPressed:
+                        isLoading ? null : _onForgotPasswordPressed,
                     child: Text(
                       'Forgot password?',
                       style: textTheme.bodyMedium?.copyWith(
@@ -253,28 +281,30 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 Gap.vMin,
 
-                // Log In button
+                // LOG IN
                 AppButton(
                   label: 'Log In',
-                  isLoading: _isLoggingIn,
-                  isEnabled: !anyLoading,
+                  isLoading: isLoading,
+                  isEnabled: !isLoading,
                   onPressed: _onLoginPressed,
                 ),
 
                 Gap.vMin,
 
-                // Continue with Google button
+                // GOOGLE SIGN IN
                 AppButton(
                   label: 'Continue with Google',
-                  isLoading: _isGoogleLoading,
-                  isEnabled: !anyLoading,
-                  icon: PhosphorIcon(PhosphorIcons.googleLogo),
+                  isLoading: isLoading,
+                  isEnabled: !isLoading,
+                  icon: PhosphorIcon(
+                    PhosphorIcons.googleLogo,
+                  ),
                   onPressed: _onGoogleLoginPressed,
                 ),
 
                 const SizedBox(height: AppSpacing.standard),
 
-                // Switch to Sign Up
+                // SIGN UP NAVIGATION
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -283,7 +313,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: textTheme.bodyMedium,
                     ),
                     GestureDetector(
-                      onTap: anyLoading ? null : _onSignUpNavigationPressed,
+                      onTap: isLoading
+                          ? null
+                          : _onSignUpNavigationPressed,
                       child: Text(
                         'Sign Up',
                         style: textTheme.bodyMedium?.copyWith(
